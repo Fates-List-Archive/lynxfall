@@ -26,3 +26,7 @@ def emd(txt):
     # ::: boxes
     ret_text = parse(ret_text, ":::", BoxControl())
     return ret_text
+
+# Test cases
+
+#emd.emd("Hi ==Highlight== We love you == meow == What about you? == mew == ::: info\nHellow world:::")
