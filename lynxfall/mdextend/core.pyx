@@ -1,3 +1,4 @@
+#cython: language_level=3
 from .emd_hab import HighlightControl, BoxControl
 
 def parse(rtxt, look, control):
