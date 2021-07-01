@@ -1,5 +1,5 @@
 #cython: language_level=3
-from .emd_hab import HighlightControl, BoxControl
+from .hab import HighlightControl, BoxControl
 
 def parse(rtxt, look, control):
     txtl = rtxt.split(look) # Turn the text into a string split based on the markdown character we are looking for
