@@ -46,7 +46,7 @@ class BoxControl(Control):
         return f"<div class='{style_class}' style='color: white !important;'><span class='iconify white' data-icon='{icon_class}' aria-hidden='true' data-inline='false'></span><span class='bold'>{style.title()}</span>" + s.replace(style, "", 1) + "</div>"
 
 # This adds the == highlighter and ::: boxes
-def emd(txt: str) -> str:
+def emd(txt):
     # == highlighting
     ret_text = parse(txt, "==", HighlightControl())
     # ::: boxes
