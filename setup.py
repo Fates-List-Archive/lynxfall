@@ -6,7 +6,9 @@ setup(
     version = "1.0",
     author = "Rootspring",
     author_email = "tor_needletail@outlook.com",
-    ext_modules=cythonize("mdextend/emd_hab.pyx"),
-    packages=["mdextend"],
+    ext_modules=cythonize(
+        "lynxfall/mdextend/eme.pyx"
+    ),
+    packages=["lynxfall"],
     zip_safe=False,
 )
