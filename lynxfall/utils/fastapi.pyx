@@ -15,7 +15,7 @@ def abort(code: str) -> StarletteHTTPException:
     
 # API returners
 def api_return(done: bool, reason: str, status_code: int, headers: dict = None, **kwargs): 
-    serialized = {}
+    serialized: dict = {}
     for kwarg in kwargs.keys():
         if isinstance(kwargs[kwarg], BaseModel):
             serialized = serialized | {kwarg: kwargs[kwarg].dict()}
