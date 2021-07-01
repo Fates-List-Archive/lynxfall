@@ -12,7 +12,7 @@ from pydantic import BaseModel
 def redirect(path: str) -> RedirectResponse:
     return RedirectResponse(path, status_code=HTTP_303_SEE_OTHER)
 
-def abort(code: str) -> StarletteHTTPException:
+def abort(code: int) -> StarletteHTTPException:
     raise StarletteHTTPException(status_code=code)
     
 # API returners
