@@ -1,3 +1,5 @@
+#cython: language_level=3
+
 # Extra parsing for markdown (Highlighting and alert boxes)
 
 # Base Control class
