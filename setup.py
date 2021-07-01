@@ -7,7 +7,8 @@ setup(
     author = "Rootspring",
     author_email = "tor_needletail@outlook.com",
     ext_modules=cythonize(
-        "lynxfall/mdextend/eme.pyx"
+        "lynxfall/mdextend/*.pyx",
+        "lynxfall/utils/*.pyx"
     ),
     packages=["lynxfall"],
     zip_safe=False,
