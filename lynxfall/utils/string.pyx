@@ -19,3 +19,36 @@ def human_format(num: int) -> str:
             num /= 10
         num /= 1000.0
     return '{} {}'.format('{:f}'.format(num).rstrip('0').rstrip('.'), ['', 'K', 'M', 'B', 'T', "Quad.", "Quint.", "Sext.", "Sept.", "Oct.", "Non.", "Dec.", "Tre.", "Quat.", "quindec.", "Sexdec.", "Octodec.", "Novemdec.", "Vigint.", "Duovig.", "Trevig.", "Quattuorvig.", "Quinvig.", "Sexvig.", "Septenvig.", "Octovig.", "Nonvig.", "Trigin.", "Untrig.", "Duotrig.", "Googol."][magnitude])
+
+def secure_strcmp(val1, val2):
+    """
+    From Django:
+    
+    Return True if the two strings are equal, False otherwise. This is a secure function
+    """
+    return secrets.compare_digest(val1, val2)
+
+#@jit(nopython = True)
+def ireplace(old, new, text):
+    """Case insensitive replace"""
+    idx = 0
+    while idx < len(text):
+        index_l = text.lower().find(old.lower(), idx)
+        if index_l == -1:
+            return text
+        text = text[:index_l] + new + text[index_l + len(old):]
+        idx = index_l + len(new) 
+    return text
+
+def replace_last(string, delimiter, replacement):
+    start, _, end = string.rpartition(delimiter)
+    return start + replacement + end
+
+def ireplacem(replace_tuple, text):
+    """Calls ireplace multiple times for a replace tuple of format ((old, new), (old, new)). Can also support regular replace if third flag is set"""
+    for replace in replace_tuple:
+        if text.startswith("C>"):
+            text = text.replace(replace[0], replace[1]).replace("C>", "")
+        else:
+            text = ireplace(replace[0], replace[1], text)
+    return text
