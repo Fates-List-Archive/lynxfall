@@ -8,8 +8,9 @@ setup(
     author_email = "tor_needletail@outlook.com",
     ext_modules=cythonize([
         "lynxfall/mdextend/*.pyx",
-        "lynxfall/utils/*.pyx"
+        "lynxfall/utils/*.pyx",
+        "lynxfall/ratelimits/*.pyx"
     ]),
-    packages=["lynxfall", "lynxfall.mdextend", "lynxfall.utils"],
+    packages=["lynxfall", "lynxfall.mdextend", "lynxfall.utils", "lynxfall.ratelimits"],
     zip_safe=False,
 )
