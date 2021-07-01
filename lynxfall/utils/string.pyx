@@ -55,7 +55,6 @@ def ireplacem(replace_tuple, text):
 
 def intl_text(text: str, lang: str, link: bool = False, linked_langs: dict = {}, dbg = False):
     """Text internationalizer"""
-    logger.trace(f"Called intl_text with text of {text}, lang of {lang}, link of {link} and linked_langs of {linked_langs}")
     lang = lang if lang.replace(" ", "") else "default" # If lang is empty/none, set it to default, otherwise keep the lang
     ltext = text.split(f"[[lang {lang.lower()}") # Split text into sections
     if len(ltext) == 1: # We didnt get any sections
