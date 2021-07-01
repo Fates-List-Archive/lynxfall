@@ -39,3 +39,28 @@ def api_success(reason: str = None, status_code: int = 200, **kwargs):
     if kwargs and status_code == 200:
         status_code = 206
     return api_return(done = True, reason = reason, status_code = status_code, **kwargs)
+
+# Simple API versioning
+def api_versioner(request, def_version):
+    if (str(request.url.path).startswith("/api/") 
+        and not str(request.url.path).startswith("/api/docs") 
+        and not str(request.url.path).startswith("/api/v") 
+        and not str(request.url.path).startswith("/api/ws")
+    ):
+        if request.headers.get("API-Version"):
+            api_ver = request.headers.get("API-Version")
+        else:
+            api_ver = str(def_version)
+        new_scope = request.scope
+        new_scope["path"] = new_scope["path"].replace("/api", f"/api/v{api_ver}")
+    else:
+        new_scope = request.scope
+        if str(request.url.path).startswith("/api/v"):
+            api_ver = str(request.url.path).split("/")[2][1:] # Split by / and get 2nd (vX part and then get just X)
+            if api_ver == "":
+                api_ver = str(def_version)
+        else:
+            api_ver = str(def_version)
+    if request.headers.get("Method") and str(request.headers.get("Method")).upper() in ("GET", "POST", "PUT", "PATCH", "DELETE"):
+        new_scope["method"] = str(request.headers.get("Method")).upper()
+    return new_scope, api_ver
