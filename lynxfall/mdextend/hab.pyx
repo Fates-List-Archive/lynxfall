@@ -25,7 +25,3 @@ class BoxControl(Control):
         else: 
             return s
         return f"<div class='{style_class}' style='color: white !important;'><span class='iconify white' data-icon='{icon_class}' aria-hidden='true' data-inline='false'></span><span class='bold'>{style.title()}</span>" + s.replace(style, "", 1) + "</div>"
-
-# Test cases
-
-#emd.emd("Hi ==Highlight== We love you == meow == What about you? == mew == ::: info\nHellow world:::")
