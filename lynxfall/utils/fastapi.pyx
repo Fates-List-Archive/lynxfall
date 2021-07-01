@@ -1,3 +1,4 @@
+#cython: language_level=3
 import secrets
 import string
 
@@ -5,6 +6,7 @@ from fastapi import Request
 from fastapi.responses import HTMLResponse, ORJSONResponse, RedirectResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.status import HTTP_302_FOUND, HTTP_303_SEE_OTHER
+from pydantic import BaseModel
 
 # Some basic utility functions for Fates List (and other users as well)
 def redirect(path: str) -> RedirectResponse:
