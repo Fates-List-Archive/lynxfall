@@ -6,10 +6,10 @@ setup(
     version = "1.0",
     author = "Rootspring",
     author_email = "tor_needletail@outlook.com",
-    ext_modules=cythonize(
+    ext_modules=cythonize([
         "lynxfall/mdextend/*.pyx",
         "lynxfall/utils/*.pyx"
-    ),
+    ]),
     packages=["lynxfall"],
     zip_safe=False,
 )
