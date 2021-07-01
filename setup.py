@@ -10,6 +10,6 @@ setup(
         "lynxfall/mdextend/*.pyx",
         "lynxfall/utils/*.pyx"
     ]),
-    packages=["lynxfall"],
+    packages=["lynxfall", "lynxfall.mdextend", "lynxfall.utils"],
     zip_safe=False,
 )
