@@ -10,10 +10,6 @@ from lynxfall.utils.string import secure_strcmp
 import time
 nest_asyncio.apply()
 
-# Import all needed backends
-backends = Backends()
-builtins.backends = backends
-
 def serialize(obj):
     try:
         orjson.dumps({"rc": obj})
@@ -140,13 +136,13 @@ async def run_worker(
     state.backends = Backends(backend_folder = backend_folder)
     logger.opt(ansi = True).info(f"<magenta>Starting Lynxfall RabbitMQ Worker (time: {state.start_time})...</magenta>")
     state.stats = Stats()
-    await backends.loadall(state) # Load all the backends and run prehooks
-    await backends.load(state, "lynxfall.rabbit.core.default_backends.admin") # Load admin
+    await state.backends.loadall(state) # Load all the backends and run prehooks
+    await state.backends.load(state, "lynxfall.rabbit.core.default_backends.admin") # Load admin
     # Get handled message count
     total_msgs = await state.redis.get(f"rmq_total_msgs")
     state.stats.total_msgs = int(total_msgs) if total_msgs and isinstance(total_msgs, int) else 0
     state.prepare_rc = await prepare_func(state, logger) if prepare_func else None
-    for backend in backends.getall():
+    for backend in state.backends.getall():
         await _new_task(backend, state)
     state.end_time = time.time()
     state.load_time = state.end_time - state.start_time
