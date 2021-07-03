@@ -121,25 +121,16 @@ class WorkerState():
 async def run_worker(
     *, 
     loop, 
-    backend_folder, 
-    redis_url,
-    rabbir_url,
-    startup_func = None, 
-    prepare_func = None, 
-    rabbit_args = {}, 
-    redis_args = {}
+    backend_folder,
+    startup_func, 
+    prepare_func
 ):
     """Main worker function"""
-    builtins.state = State((await startup_func(logger) if startup_func else {}))
+    builtins.state = State((await startup_func(logger))
     start_time = time.time()
     # Import all needed backends
     state.backends = Backends(backend_folder = backend_fodler)
     logger.opt(ansi = True).info(f"<magenta>Starting Lynxfall RabbitMQ Worker (time: {start_time})...</magenta>")
-    state.rabbitmq_db = await aio_pika.connect_robust(
-        rabbit_url,
-        **rabbit_args
-    )
-    state.redis_db = await aioredis.from_url(redis_url, **redis_args) # Redis is required
     await backends.loadall() # Load all the backends and run prehooks
     state.stats = Stats()
     
