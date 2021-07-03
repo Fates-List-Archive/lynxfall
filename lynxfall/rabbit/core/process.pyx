@@ -121,6 +121,8 @@ class WorkerState():
     Stores worker state
     - worker_key (the worker key)
     """
+    # cdefs
+    cdef int stats_toral_msgs = 0
     pass
 
 async def run_worker(
@@ -142,7 +144,6 @@ async def run_worker(
     state.stats = Stats()
     await backends.loadall(state) # Load all the backends and run prehooks
     await backends.load(state, "lynxfall.rabbit.core.default_backends.admin") # Load admin
-    cdef int state.stats_toral_msgs = 0
     # Get handled message count
     total_msgs = await state.redis.get(f"rmq_total_msgs")
     state.stats.total_msgs = int(total_msgs) if total_msgs and isinstance(total_msgs, int) else 0
