@@ -134,7 +134,7 @@ async def run_worker(
     state = WorkerState()
     builtins.state = state
     state.worker_key = worker_key
-    startup_func(state, logger)
+    await startup_func(state, logger)
     state.start_time = time.time()
     # Import all needed backends
     state.backends = Backends(backend_folder = backend_folder)
