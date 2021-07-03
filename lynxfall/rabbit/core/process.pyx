@@ -121,8 +121,6 @@ class WorkerState():
     Stores worker state
     - worker_key (the worker key)
     """
-    # cdefs
-    cdef int stats_toral_msgs = 0
     pass
 
 async def run_worker(
