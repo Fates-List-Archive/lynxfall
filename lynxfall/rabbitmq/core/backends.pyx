@@ -1,6 +1,7 @@
 # Import all needed backends
 import importlib
 import os
+from loguru import logger
 
 class Backends():
     def __init__(self, backend_folder = "rabbitmq/backend"):
