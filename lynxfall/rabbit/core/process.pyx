@@ -5,6 +5,7 @@ import nest_asyncio
 import builtins
 import orjson
 from lynxfall.rabbitmq.core.backends import Backends
+import time
 nest_asyncio.apply()
 
 # Import all needed backends
