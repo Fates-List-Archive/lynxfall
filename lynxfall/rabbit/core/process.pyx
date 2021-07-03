@@ -5,6 +5,7 @@ import nest_asyncio
 import builtins
 import orjson
 from lynxfall.rabbitmq.core.backends import Backends
+from lynxfall.util.string import secure_strcmp
 import time
 nest_asyncio.apply()
 
@@ -25,7 +26,7 @@ def serialize(obj):
 async def _new_task(queue, state):
     friendly_name = state.backends.getname(queue)
     _channel = await state.rabbit.channel()
-    _queue = await _channel.declare_queue(instance_name + "." + queue, durable = True) # Function to handle our queue
+    _queue = await _channel.declare_queue(queue, durable = True) # Function to handle our queue
     async def _task(message: aio_pika.IncomingMessage):
         """RabbitMQ Queue Function"""
         curr = state.stats.on_message
@@ -125,7 +126,7 @@ async def run_worker(
     *, 
     worker_key,
     backend_folder,
-    startup_func, 
+    startup_func,
     prepare_func
 ):
     """Main worker function"""
