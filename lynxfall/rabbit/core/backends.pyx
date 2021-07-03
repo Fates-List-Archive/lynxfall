@@ -70,4 +70,4 @@ class Backends():
 
     def getpath(self, f):
         """Utility function to get the path given a .py file (or backend name)"""
-        return f'{self.backend_folder.replace("/", ".")}.{f.replace(".py", "")}')
+        return f'{self.backend_folder.replace("/", ".")}.{f.replace(".py", "")}'
