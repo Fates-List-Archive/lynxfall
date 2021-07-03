@@ -126,7 +126,8 @@ async def run_worker(
     prepare_func
 ):
     """Main worker function"""
-    builtins.state = State((await startup_func(logger))
+    builtins.state = State()
+    startup_func(state, logger)
     start_time = time.time()
     # Import all needed backends
     state.backends = Backends(backend_folder = backend_folder)
@@ -140,7 +141,7 @@ async def run_worker(
         state.stats.total_msgs = int(state.stats.total_msgs)
     except:
         state.stats.total_msgs = 0
-    state.prepare_rc = await prepare_func() if prepare_func() else None
+    state.prepare_rc = await prepare_func(state) if prepare_func else None
     for backend in backends.getall():
         await _new_task(backend, worker_key)
     state.end_time = time.time()
