@@ -10,7 +10,7 @@ class Backends():
         self.rmq_backends = {}
         self.backend_folder = backend_folder
 
-    async def add(self, path, config, backend, reload, state):
+    async def add(self, state, path, config, backend, reload):
         if not reload and config.queue in self.rmq_backends.keys():
             raise ValueError("Queue already exists and not in reload mode!")
         self.rmq_backends |= {config.queue: {"backend": backend, "config": config()}}
