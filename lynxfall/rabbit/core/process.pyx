@@ -145,7 +145,7 @@ async def run_worker(
     # Get handled message count
     total_msgs = await state.redis.get(f"rmq_total_msgs")
     state.stats.total_msgs = int(total_msgs) if total_msgs and isinstance(total_msgs, int) else 0
-    state.prepare_rc = await prepare_func(state) if prepare_func else None
+    state.prepare_rc = await prepare_func(state, logger) if prepare_func else None
     for backend in backends.getall():
         await _new_task(backend, state)
     state.end_time = time.time()
