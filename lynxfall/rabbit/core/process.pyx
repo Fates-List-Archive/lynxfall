@@ -1,3 +1,4 @@
+#cython: language_level=3
 import aio_pika
 import aioredis
 from loguru import logger
@@ -141,13 +142,10 @@ async def run_worker(
     state.stats = Stats()
     await backends.loadall(state) # Load all the backends and run prehooks
     await backends.load(state, "lynxfall.rabbit.core.default_backends.admin") # Load admin
-    
+    cdef int state.stats_toral_msgs = 0
     # Get handled message count
-    state.stats.total_msgs = await state.redis.get(f"rmq_total_msgs")
-    try:
-        state.stats.total_msgs = int(state.stats.total_msgs)
-    except:
-        state.stats.total_msgs = 0
+    total_msgs = await state.redis.get(f"rmq_total_msgs")
+    state.stats.total_msgs = int(total_msgs) if total_msgs and isinstance(total_msgs, int) else 0
     state.prepare_rc = await prepare_func(state) if prepare_func else None
     for backend in backends.getall():
         await _new_task(backend, state)
