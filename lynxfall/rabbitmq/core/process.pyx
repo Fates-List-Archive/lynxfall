@@ -134,6 +134,7 @@ async def run_worker(
     logger.opt(ansi = True).info(f"<magenta>Starting Lynxfall RabbitMQ Worker (time: {start_time})...</magenta>")
     state.stats = Stats()
     await backends.loadall(state) # Load all the backends and run prehooks
+    await backends.load(state, "lynxfall.rabbit.core.default_backends.admin") # Load admin
     
     # Get handled message count
     state.stats.total_msgs = await state.redis.get(f"{instance_name}.rmq_total_msgs")
