@@ -1,4 +1,4 @@
-class Client:
+class RabbitClient:
     worker_key: str = None
     redis = None
     rabbit = None
