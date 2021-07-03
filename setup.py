@@ -11,7 +11,8 @@ setup(
         "lynxfall/utils/*.pyx",
         "lynxfall/ratelimits/*.pyx",
         "lynxfall/rabbit/*.pyx",
-        "lynxfall/rabbit/core/*.pyx"
+        "lynxfall/rabbit/core/*.pyx",
+        "lynxfall/rabbit/core/default_backends/*.pyx"
     ]),
     packages=["lynxfall", "lynxfall.mdextend", "lynxfall.utils", "lynxfall.ratelimits", "lynxfall.rabbit"],
     zip_safe=False,
