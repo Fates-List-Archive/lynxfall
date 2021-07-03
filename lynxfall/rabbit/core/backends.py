@@ -17,7 +17,7 @@ class Backends():
         pre = self.getpre(config.queue)
         logger.debug(f"Got prehook {pre}")
         if pre:
-            self.rmq_backends[config.queue]["pre_ret"] = await pre(config, state = state)
+            self.rmq_backends[config.queue]["pre_ret"] = await pre(state = state)
         else:
             self.rmq_backends[config.queue]["pre_ret"] = None
 
