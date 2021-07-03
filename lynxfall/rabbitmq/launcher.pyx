@@ -7,7 +7,7 @@ def run(**run_worker_args):
     try:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        loop.create_task(run_worker(loop, **run_worker_args))
+        loop.create_task(run_worker(**run_worker_args))
 
         # we enter a never-ending loop that waits for data and runs
         # callbacks whenever necessary.
