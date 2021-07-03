@@ -22,14 +22,14 @@ def serialize(obj):
             return str(obj)
 
 async def _new_task(queue):
-    friendly_name = backends.getname(queue)
-    _channel = await rabbitmq_db.channel()
+    friendly_name = state.backends.getname(queue)
+    _channel = await state.rabbitmq_db.channel()
     _queue = await _channel.declare_queue(instance_name + "." + queue, durable = True) # Function to handle our queue
     async def _task(message: aio_pika.IncomingMessage):
         """RabbitMQ Queue Function"""
-        curr = stats.on_message
+        curr = state.stats.on_message
         logger.opt(ansi = True).info(f"<m>{friendly_name} called (message {curr})</m>")
-        stats.on_message += 1
+        state.stats.on_message += 1
         _json = orjson.loads(message.body)
         _headers = message.headers
         if not _headers:
@@ -47,19 +47,19 @@ async def _new_task(queue):
         if isinstance(rc, Exception):
             logger.warning(f"{type(rc).__name__}: {rc} (JSON of {_json})")
             rc = f"{type(rc).__name__}: {rc}"
-            stats.err_msgs.append(message) # Mark the failed message so we can ack it later    
+            state.stats.err_msgs.append(message) # Mark the failed message so we can ack it later    
         _ret = {"ret": serialize(rc), "err": err}
 
         if _json["meta"].get("ret"):
-            await redis_db.set(f"rabbit.{instance_name}-{_json['meta'].get('ret')}", orjson.dumps(_ret)) # Save return code in redis
+            await state.redis_db.set(f"rabbit.{instance_name}-{_json['meta'].get('ret')}", orjson.dumps(_ret)) # Save return code in redis
 
-        if backends.ackall(queue) or not _ret["err"]: # If no errors recorded
+        if state.backends.ackall(queue) or not _ret["err"]: # If no errors recorded
             message.ack()
         logger.opt(ansi = True).info(f"<m>Message {curr} Handled</m>")
         logger.debug(f"Message JSON of {_json}")
-        await redis_db.incr(f"{instance_name}.rmq_total_msgs", 1)
-        stats.total_msgs += 1
-        stats.handled += 1
+        await state.redis_db.incr(f"{instance_name}.rmq_total_msgs", 1)
+        state.stats.total_msgs += 1
+        state.stats.handled += 1
 
     await _queue.consume(_task)
 
@@ -72,7 +72,7 @@ class TaskHandler():
 
     async def handle(self):
         try:
-            handler = backends.get(self.queue)
+            handler = state.backends.get(self.queue)
             rc = await handler(self.dict, **self.ctx)
             if isinstance(rc, tuple):
                 return rc[0], rc[1]
@@ -113,37 +113,50 @@ class Stats():
             s.append(f"{k}: {self.__dict__[k]}")
         return "\n".join(s)
 
-async def run_worker(*, loop, startup_func, backend_folder, redis_url, rabbit_url, rabbit_args = {}, redis_args = {}):
+class WorkerState():
+    def __init__(self, dict):
+        self.__dict__.update(dict)
+        self.partial_state = True if not dict else False        
+        
+async def run_worker(
+    *, 
+    loop, 
+    backend_folder, 
+    redis_url,
+    rabbir_url,
+    startup_func = None, 
+    prepare_func = None, 
+    rabbit_args = {}, 
+    redis_args = {}
+):
     """Main worker function"""
+    builtins.state = State((await startup_func(logger) if startup_func else {}))
     start_time = time.time()
     # Import all needed backends
-    backends = Backends(backend_folder = backend_fodler)
-    builtins.backends = backends
+    state.backends = Backends(backend_folder = backend_fodler)
     logger.opt(ansi = True).info(f"<magenta>Starting Lynxfall RabbitMQ Worker (time: {start_time})...</magenta>")
-    builtins.rabbitmq_db = await aio_pika.connect_robust(
+    state.rabbitmq_db = await aio_pika.connect_robust(
         rabbit_url,
         **rabbit_args
     )
-    builtins.redis_db = await aioredis.from_url(redis_url, **redis_args) # Redis is required
-    state = await startup_func(logger)
+    state.redis_db = await aioredis.from_url(redis_url, **redis_args) # Redis is required
     await backends.loadall() # Load all the backends and run prehooks
-    builtins.stats = Stats()
+    state.stats = Stats()
     
     # Get handled message count
-    stats.total_msgs = await redis_db.get(f"{instance_name}.rmq_total_msgs")
+    state.stats.total_msgs = await redis_db.get(f"{instance_name}.rmq_total_msgs")
     try:
-        stats.total_msgs = int(stats.total_msgs)
+        state.stats.total_msgs = int(stats.total_msgs)
     except:
-        stats.total_msgs = 0
-
-    await client.wait_until_ready()
+        state.stats.total_msgs = 0
+    state.prepare_rc = await prepare_func() if prepare_func() else None
     for backend in backends.getall():
         await _new_task(backend)
-    end_time = time.time()
+    state.end_time = time.time()
     stats.load_time = end_time - start_time
     logger.opt(ansi = True).info(f"<magenta>Worker up in {end_time - start_time} seconds at time {end_time}!</magenta>")
 
 async def disconnect_worker():
     logger.opt(ansi = True).info("<magenta>RabbitMQ worker down. Killing DB connections!</magenta>")
-    await rabbitmq_db.disconnect()
+    await state.rabbitmq_db.disconnect()
     await redis_db.close()
