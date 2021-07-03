@@ -4,7 +4,7 @@ class RabbitClient:
     rabbit = None
 
     @classmethod
-    def setup(clx, worker_key: str, redis, rabbit):
+    def setup(cls, worker_key: str, redis, rabbit):
         cls.worker_key = worker_key
         cls.redis = redis
         cls.rabbit = rabbit
