@@ -80,8 +80,8 @@ class TaskHandler():
                 return rc, True
             return rc, False
         except Exception as exc:
-            stats.errors += 1 # Record new error
-            stats.exc.append(exc)
+            state.stats.errors += 1 # Record new error
+            state.stats.exc.append(exc)
             return exc, True
 
 class Stats():
@@ -132,13 +132,13 @@ async def run_worker(
     # Import all needed backends
     state.backends = Backends(backend_folder = backend_folder)
     logger.opt(ansi = True).info(f"<magenta>Starting Lynxfall RabbitMQ Worker (time: {start_time})...</magenta>")
-    await backends.loadall() # Load all the backends and run prehooks
     state.stats = Stats()
+    await backends.loadall(state) # Load all the backends and run prehooks
     
     # Get handled message count
-    state.stats.total_msgs = await redis.get(f"{instance_name}.rmq_total_msgs")
+    state.stats.total_msgs = await state.redis.get(f"{instance_name}.rmq_total_msgs")
     try:
-        state.stats.total_msgs = int(stats.total_msgs)
+        state.stats.total_msgs = int(state.stats.total_msgs)
     except:
         state.stats.total_msgs = 0
     state.prepare_rc = await prepare_func() if prepare_func() else None
@@ -151,4 +151,4 @@ async def run_worker(
 async def disconnect_worker():
     logger.opt(ansi = True).info("<magenta>RabbitMQ worker down. Killing DB connections!</magenta>")
     await state.rabbit.disconnect()
-    await redis.close()
+    await state.redis.close()
