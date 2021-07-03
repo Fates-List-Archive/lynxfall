@@ -1,4 +1,5 @@
 import asyncio
+from lynxfall.rabbit.client import Client
 
 # Needed for it to actually work
 import uuid
@@ -17,13 +18,13 @@ RMQ_META = {
 
 async def add_rmq_task(queue_name: str, data: dict, **meta):
     """Adds a RabbitMQ Task using the Fates List Worker Protocol"""
-    if not Client.worker_key or not Client.redis:
-        raise Exception("You must set worker key and redis using set before using this!")
+    if not Client.worker_key or not Client.redis or not Client.rabbit:
+        raise Exception("You must set worker key, redis and redis using set before using this!")
     if meta:
         meta = deepcopy(RMQ_META) | meta
     else:
         meta = RMQ_META
-    channel = await rabbitmq_db.channel()
+    channel = await Client.rabbit.channel()
     await channel.set_qos(prefetch_count=1)
     await channel.default_exchange.publish(
         aio_pika.Message(orjson.dumps({"ctx": data, "meta": meta}), delivery_mode=aio_pika.DeliveryMode.PERSISTENT, headers = {"auth": Client.worker_key}),
