@@ -44,7 +44,7 @@ async def _new_task(queue, state):
 
         # Normally handle rabbitmq task
         _task_handler = TaskHandler(_json, queue)
-        rc, err = await _task_handler.handle()
+        rc, err = await _task_handler.handle(state)
         if isinstance(rc, Exception):
             logger.warning(f"{type(rc).__name__}: {rc} (JSON of {_json})")
             rc = f"{type(rc).__name__}: {rc}"
@@ -71,7 +71,7 @@ class TaskHandler():
         self.meta = dict["meta"]
         self.queue = queue
 
-    async def handle(self):
+    async def handle(self, state):
         try:
             handler = state.backends.get(self.queue)
             rc = await handler(state, self.dict, **self.ctx)
