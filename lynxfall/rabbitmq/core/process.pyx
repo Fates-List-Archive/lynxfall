@@ -119,8 +119,8 @@ class WorkerState():
         self.partial_state = True if not dict else False        
         
 async def run_worker(
-    *, 
     loop,
+    *, 
     worker_key,
     backend_folder,
     startup_func, 
