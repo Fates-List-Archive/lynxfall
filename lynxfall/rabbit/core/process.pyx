@@ -129,7 +129,7 @@ async def run_worker(
     prepare_func
 ):
     """Main worker function"""
-    builtins.state = WorkerState()
+    state = WorkerState()
     state.worker_key = worker_key
     startup_func(state, logger)
     state.start_time = time.time()
