@@ -21,6 +21,7 @@ def serialize(obj):
             return str(obj)
 
 async def _new_task(queue, state):
+    logger.debug("In new task")
     friendly_name = state.backends.getname(queue)
     _channel = await state.rabbit.channel()
     _queue = await _channel.declare_queue(queue, durable = True) # Function to handle our queue
