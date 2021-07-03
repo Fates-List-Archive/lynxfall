@@ -73,7 +73,7 @@ class TaskHandler():
     async def handle(self):
         try:
             handler = state.backends.get(self.queue)
-            rc = await handler(self.dict, **self.ctx)
+            rc = await handler(state, self.dict, **self.ctx)
             if isinstance(rc, tuple):
                 return rc[0], rc[1]
             elif isinstance(rc, Exception):
