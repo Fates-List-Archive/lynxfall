@@ -3,7 +3,8 @@ class Client:
     redis = None
     rabbit = None
 
-def setup(worker_key: str, redis, rabbit):
-    Client.worker_key = worker_key
-    Client.redis = redis
-    Client.rabbit = rabbit
+    @classmethod
+    def setup(clx, worker_key: str, redis, rabbit):
+        cls.worker_key = worker_key
+        cls.redis = redis
+        cls.rabbit = rabbit
