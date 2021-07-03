@@ -1,5 +1,5 @@
 import asyncio
-from lynxfall.rabbit.client import Client
+from lynxfall.rabbit.client import RabbitClient
 
 # Needed for it to actually work
 import uuid
@@ -18,16 +18,16 @@ RMQ_META = {
 
 async def add_rmq_task(queue_name: str, data: dict, **meta):
     """Adds a RabbitMQ Task using the Fates List Worker Protocol"""
-    if not Client.worker_key or not Client.redis or not Client.rabbit:
+    if not RabbitClient.worker_key or not RabbitClient.redis or not RabbitClient.rabbit:
         raise Exception("You must set worker key, redis and redis using set before using this!")
     if meta:
         meta = deepcopy(RMQ_META) | meta
     else:
         meta = RMQ_META
-    channel = await Client.rabbit.channel()
+    channel = await RabbitClient.rabbit.channel()
     await channel.set_qos(prefetch_count=1)
     await channel.default_exchange.publish(
-        aio_pika.Message(orjson.dumps({"ctx": data, "meta": meta}), delivery_mode=aio_pika.DeliveryMode.PERSISTENT, headers = {"auth": Client.worker_key}),
+        aio_pika.Message(orjson.dumps({"ctx": data, "meta": meta}), delivery_mode=aio_pika.DeliveryMode.PERSISTENT, headers = {"auth": RabbitClient.worker_key}),
         routing_key=queue_name
     )
 
@@ -44,11 +44,11 @@ async def add_rmq_task_with_ret(queue_name, data: dict, **meta):
 async def rmq_get_ret(id):
     tries = 0
     while tries < 100:
-        ret = await Client.redis.get(f"rabbit-{id}")
+        ret = await RabbitClient.redis.get(f"rabbit-{id}")
         if not ret:
             await asyncio.sleep(0.5) # Wait for half second before retrying
             tries += 1
             continue
-        await Client,redis.delete(f"rabbit-{id}")
+        await RabbitClient,redis.delete(f"rabbit-{id}")
         return orjson.loads(ret), True
     return id, False # We didnt get anything
