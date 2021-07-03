@@ -1,7 +1,7 @@
 """Lynxfall Task Handling using rabbitmq (simple rabbitmq workers)"""
 import asyncio
 import importlib
-from lynxfall.rabbitmq.core.process import run_worker, disconnect_worker
+from lynxfall.rabbit.core.process import run_worker, disconnect_worker
 
 def run(**run_worker_args):
     try:
