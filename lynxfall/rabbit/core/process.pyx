@@ -143,7 +143,7 @@ async def run_worker(
     await backends.load(state, "lynxfall.rabbit.core.default_backends.admin") # Load admin
     
     # Get handled message count
-    state.stats.total_msgs = await state.redis.get(f"{instance_name}.rmq_total_msgs")
+    state.stats.total_msgs = await state.redis.get(f"rmq_total_msgs")
     try:
         state.stats.total_msgs = int(state.stats.total_msgs)
     except:
