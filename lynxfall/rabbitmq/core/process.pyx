@@ -4,6 +4,7 @@ from loguru import logger
 import nest_asyncio
 import builtins
 import orjson
+from lynxfall.rabbitmq.core.backends import Backends
 nest_asyncio.apply()
 
 # Import all needed backends
@@ -19,23 +20,6 @@ def serialize(obj):
             return dict(obj)
         except:
             return str(obj)
-
-def _setup_discord():
-    # Setup client (main + server)
-    intent_main = discord.Intents.default()
-    intent_main.typing = False
-    intent_main.bans = False
-    intent_main.emojis = False
-    intent_main.integrations = False
-    intent_main.webhooks = False
-    intent_main.invites = False
-    intent_main.voice_states = False
-    intent_main.messages = False
-    intent_main.members = True
-    intent_main.presences = True
-    intent_server = deepcopy(intent_main)
-    intent_server.presences = False
-    return discord.Client(intents=intent_main), discord.Client(intents=intent_server)
 
 async def _new_task(queue):
     friendly_name = backends.getname(queue)
