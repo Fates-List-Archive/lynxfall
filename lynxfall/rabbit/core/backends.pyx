@@ -1,4 +1,6 @@
-# Import all needed backends
+#cython: language_level=3
+
+# Imports all needed backends
 import importlib
 import os
 from loguru import logger
