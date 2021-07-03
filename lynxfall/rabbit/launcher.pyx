@@ -1,3 +1,4 @@
+#cython: language_level=3
 """Lynxfall Task Handling using rabbitmq (simple rabbitmq workers)"""
 import asyncio
 import importlib
