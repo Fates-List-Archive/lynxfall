@@ -5,7 +5,7 @@ import nest_asyncio
 import builtins
 import orjson
 from lynxfall.rabbitmq.core.backends import Backends
-from lynxfall.util.string import secure_strcmp
+from lynxfall.utils.string import secure_strcmp
 import time
 nest_asyncio.apply()
 
