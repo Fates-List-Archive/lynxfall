@@ -128,7 +128,7 @@ async def run_worker(
     """Main worker function"""
     builtins.state = State()
     startup_func(state, logger)
-    start_time = time.time()
+    state.start_time = time.time()
     # Import all needed backends
     state.backends = Backends(backend_folder = backend_folder)
     logger.opt(ansi = True).info(f"<magenta>Starting Lynxfall RabbitMQ Worker (time: {start_time})...</magenta>")
@@ -146,8 +146,8 @@ async def run_worker(
     for backend in backends.getall():
         await _new_task(backend, worker_key)
     state.end_time = time.time()
-    stats.load_time = end_time - start_time
-    logger.opt(ansi = True).info(f"<magenta>Worker up in {end_time - start_time} seconds at time {end_time}!</magenta>")
+    state.load_time = state.end_time - state.start_time
+    logger.opt(ansi = True).info(f"<magenta>Worker up in {state.end_time - state.start_time} seconds at time {state.end_time}!</magenta>")
 
 async def disconnect_worker():
     logger.opt(ansi = True).info("<magenta>RabbitMQ worker down. Killing DB connections!</magenta>")
