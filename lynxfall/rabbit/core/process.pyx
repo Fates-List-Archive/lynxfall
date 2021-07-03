@@ -130,6 +130,7 @@ async def run_worker(
 ):
     """Main worker function"""
     state = WorkerState()
+    builtins.state = state
     state.worker_key = worker_key
     startup_func(state, logger)
     state.start_time = time.time()
@@ -153,7 +154,7 @@ async def run_worker(
     state.load_time = state.end_time - state.start_time
     logger.opt(ansi = True).info(f"<magenta>Worker up in {state.end_time - state.start_time} seconds at time {state.end_time}!</magenta>")
 
-async def disconnect_worker(state):
+async def disconnect_worker(state = None):
     logger.opt(ansi = True).info("<magenta>RabbitMQ worker down. Killing DB connections!</magenta>")
     await state.rabbit.disconnect()
     await state.redis.close()
