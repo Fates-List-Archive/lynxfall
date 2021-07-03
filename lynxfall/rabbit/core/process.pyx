@@ -22,7 +22,7 @@ def serialize(obj):
         except:
             return str(obj)
 
-async def _new_task(queue, worker_key):
+async def _new_task(queue, state):
     friendly_name = state.backends.getname(queue)
     _channel = await state.rabbit.channel()
     _queue = await _channel.declare_queue(instance_name + "." + queue, durable = True) # Function to handle our queue
@@ -37,7 +37,7 @@ async def _new_task(queue, worker_key):
             logger.error(f"Invalid auth for {friendly_name}")
             message.ack()
             return # No valid auth sent
-        if not secure_strcmp(_headers.get("auth"), worker_key):
+        if not secure_strcmp(_headers.get("auth"), state.worker_key):
             logger.error(f"Invalid auth for {friendly_name} and JSON of {_json}")
             message.ack()
             return # No valid auth sent
@@ -115,10 +115,12 @@ class Stats():
         return "\n".join(s)
 
 class WorkerState():
-    def __init__(self, dict):
-        self.__dict__.update(dict)
-        self.partial_state = True if not dict else False        
-        
+    """
+    Stores worker state
+    - worker_key (the worker key)
+    """
+    pass
+
 async def run_worker(
     *, 
     worker_key,
@@ -127,12 +129,13 @@ async def run_worker(
     prepare_func
 ):
     """Main worker function"""
-    builtins.state = State()
+    builtins.state = WorkerState()
+    state.worker_key = worker_key
     startup_func(state, logger)
     state.start_time = time.time()
     # Import all needed backends
     state.backends = Backends(backend_folder = backend_folder)
-    logger.opt(ansi = True).info(f"<magenta>Starting Lynxfall RabbitMQ Worker (time: {start_time})...</magenta>")
+    logger.opt(ansi = True).info(f"<magenta>Starting Lynxfall RabbitMQ Worker (time: {state.start_time})...</magenta>")
     state.stats = Stats()
     await backends.loadall(state) # Load all the backends and run prehooks
     await backends.load(state, "lynxfall.rabbit.core.default_backends.admin") # Load admin
@@ -145,7 +148,7 @@ async def run_worker(
         state.stats.total_msgs = 0
     state.prepare_rc = await prepare_func(state) if prepare_func else None
     for backend in backends.getall():
-        await _new_task(backend, worker_key)
+        await _new_task(backend, state)
     state.end_time = time.time()
     state.load_time = state.end_time - state.start_time
     logger.opt(ansi = True).info(f"<magenta>Worker up in {state.end_time - state.start_time} seconds at time {state.end_time}!</magenta>")
