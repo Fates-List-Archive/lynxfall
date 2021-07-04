@@ -10,6 +10,7 @@ from lynxfall.core.classes import Singleton
 from lynxfall.rabbit.client import RabbitClient # Patch for rabbitmq
 import time
 import sys
+import uuid
 nest_asyncio.apply()
     
 class WorkerState(Singleton):
@@ -45,18 +46,24 @@ async def _new_task(queue, state):
         state.stats.on_message += 1
         _json = orjson.loads(message.body)
         _headers = message.headers
+        
         if not _headers:
             logger.error(f"Invalid auth for {friendly_name}")
             message.ack()
             return # No valid auth sent
+        
         if not secure_strcmp(_headers.get("auth"), state.worker_key):
             logger.error(f"Invalid auth for {friendly_name} and JSON of {_json}")
             message.ack()
             return # No valid auth sent
 
         # Normally handle rabbitmq task
+        id = uuid.uuid4()
+        state.tasks_running[id] = True
         _task_handler = TaskHandler(_json, queue)
         rc, err = await _task_handler.handle(state)
+        del state.tasks_running[id]
+        
         if isinstance(rc, Exception):
             await state.on_error(state, logger, message, rc, "task_error", "th_ret_exc")
             logger.warning(f"{type(rc).__name__}: {rc} (JSON of {_json})")
@@ -182,6 +189,7 @@ async def run_worker(
         sys.exit(-1)
     
     state.start_time = time.time()
+    state.tasks_running = {}
     
     RabbitClient.setup(worker_key, state.redis, state.rabbit) # Some workers may want to make a new task. Allow this
     
