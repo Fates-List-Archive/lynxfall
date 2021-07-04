@@ -22,10 +22,12 @@ Next, create a file called rabbitmq_worker.py and put the following code in it:
 ```py
 
 from lynxfall.rabbit.launcher import run
+import aioredis
+import aio_pika
 
 async def on_startup(state, logger):
-    state.redis = ...
-    state.rabbit = ...
+    state.redis = aioredis.from_url(...)
+    state.rabbit = aio_pika.connect_robust(...)
 
 async def on_prepare(state, logger):
     """Do any custom preparations here"""
