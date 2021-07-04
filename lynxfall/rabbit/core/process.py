@@ -64,7 +64,26 @@ async def _new_task(queue, state):
         if _json["meta"].get("ret"):
             key = f"lynxrabbit:{_json['meta'].get('ret')}"
             logger.debug(f"Saving to {key}")
-            rc = await state.redis.set(key, orjson.dumps(_ret), ex = 60*2) # Save return code in redis
+            try:
+                await state.redis.set(key, orjson.dumps(_ret), ex = 60*2) # Save return code in redis
+            except Exception:
+                try:
+                    extra = str(_ret["ret"])
+                    
+                except Exception:
+                    extra = "No extra info available"
+                    
+                _ret["ret"] = f"Could not save return in json: {extra}"
+                _ret["err"] = True
+                try:
+                    await state.redis.set(key, orjson.dumps(_ret), ex = 60*2) # Save error code in redis
+                    
+                except Exception:
+                    extra = "No extra info available"
+                    _ret["ret"] = f"Could not save return in json: {extra}"
+                    _ret["err"] = True
+                    await state.redis.set(key, orjson.dumps(_ret), ex = 60*2) # Save error code in redis
+                    
         if state.backends.ackall(queue) or not _ret["err"]: # If no errors recorded
             message.ack()
         logger.opt(ansi = True).info(f"<m>Message {curr} Handled</m>")
