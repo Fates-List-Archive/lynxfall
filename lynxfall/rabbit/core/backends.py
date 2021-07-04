@@ -14,7 +14,7 @@ class Backends(Singleton):
     async def add(self, *, state, path, config, backend, reload):
         if not reload and config.queue in self.rmq_backends.keys():
             raise ValueError("Queue already exists and not in reload mode!")
-        self.rmq_backends |= {config.queue: {"backend": backend, "config": config()}}
+        self.rmq_backends[config.queue] = {"backend": backend, "config": config()}}
         pre = self.getpre(config.queue)
         logger.debug(f"Got prehook {pre}")
         if pre:
