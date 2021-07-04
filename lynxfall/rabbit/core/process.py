@@ -65,7 +65,8 @@ async def _new_task(queue, state):
             _json["task_id"] = id
             state.tasks_running[id] = (_json, _headers, queue)
             _task_handler = TaskHandler(_json, queue)
-            rc, err = await _task_handler.handle(state)
+            rc = await _task_handler.handle(state)
+            err = rc.get("err") if isinstance(rc, dict) else False
             del state.tasks_running[id]
         
             if isinstance(rc, Exception):
@@ -138,10 +139,7 @@ class TaskHandler():
             handler = state.backends.get(self.queue)
             rc = await handler(state, self.dict, **self.ctx)
             
-            if isinstance(rc, tuple):
-                return rc[0], rc[1]
-            
-            elif isinstance(rc, Exception):
+            if isinstance(rc, Exception):
                 await state.on_error(state, logger, None, rc, "task_error", "ret_exc")
                 raise rc
             
