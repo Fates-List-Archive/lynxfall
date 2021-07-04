@@ -128,7 +128,7 @@ async def _new_task(queue, state):
                 
         logger.opt(ansi = True).info(f"<m>Message {curr} Handled</m>")
         logger.debug(f"Message JSON of {_json}")
-        await state.redis.incr(f"rmq_total_msgs", 1)
+        await state.redis.incr("rmq_total_msgs")
         state.stats.total_msgs += 1
         state.stats.handled += 1
 
