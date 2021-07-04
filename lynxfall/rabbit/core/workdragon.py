@@ -11,20 +11,35 @@ Support for windows/mac is not planned as of right now.
 """
 import os
 import subprocess
+import threading
 
 class Worker():
-    def __init__(self, worker_num, process):
+    def __init__(self, worker_num, process, thread):
         self.process = process
         self.worker_num = worker_num
+        self.thread = thread
     
 class WorkDragon():
     def __init__(self, launcher):
         self.workers = []
         self.launcher = launcher
+        self.log_workers = True
+        self.workers_to_log = []
+    
+    def worker_log(self, proc):
+        for line in iter(proc.stdout.readline, b''):
+            line = line.decode('utf-8')
+            wnum = proc.env["LYNXFALL_WORKER_NUM"]
+            if int(wnum) in self.workers_to_log and self.log_workers:
+                print(f"{wnum}: {line}", end='')
         
     def new_worker(self):
+        wnum = len(self.workers) + 1
         proc = subprocess.Popen(['python3', '-u', launcher],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            env=dict(os.environ, LYNXFALL_WORKER_NUM=str(len(self.workers) + 1))
+            env=dict(os.environ, LYNXFALL_WORKER_NUM=str(wnum))
         )
+        t = threading.Thread(target=self.worker_log, args=(proc,))
+        t.start()
+        self.workers.append(Worker(wnum, proc, thread))
