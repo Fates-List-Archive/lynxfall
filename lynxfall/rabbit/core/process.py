@@ -112,7 +112,7 @@ async def _new_task(queue, state):
                         await state.redis.set(key, orjson.dumps(_ret), ex = 60*2) # Save error code in redis
                
         except Exception as exc:
-            logger.exception()
+            logger.exception("Worker error!")
             await state.on_error(state, logger, message, exc, "runtime_error", "unknown")
             state.stats.err_msgs.append(message) # Mark the failed message so we can ack it later
             ran = False
