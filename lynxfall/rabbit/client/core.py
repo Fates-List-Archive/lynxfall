@@ -46,11 +46,12 @@ async def add_rmq_task_with_ret(queue_name, data: dict, **meta):
 async def rmq_get_ret(id):
     tries = 0
     while tries < 100:
+        key = f"lynxrabbit:{id}"
         ret = await RabbitClient.redis.get(f"lynxrabbit:{id}")
         if not ret:
-            await asyncio.sleep(0.5) # Wait for half second before retrying
+            await asyncio.sleep(0.25) # Wait for quarter second before retrying
             tries += 1
             continue
-        await RabbitClient,redis.delete(f"lynxrabbit:{id}")
+        await RabbitClient.redis.delete(f"lynxrabbit:{id}")
         return orjson.loads(ret), True
-    return id, False # We didnt get anything
+    return key, False # We didnt get anything
