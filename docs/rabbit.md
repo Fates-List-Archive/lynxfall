@@ -51,7 +51,7 @@ Update the ...'s in the aioredis and aio_pika connection lines with your databas
 ```py
 
 redis = await aioredis.from_url('redis://localhost:12348', db = 1)
-    rabbit = await aio_pika.connect_robust(
-        f"amqp://meow:{rabbitmq_pwd}@127.0.0.1/"
-    )
+rabbit = await aio_pika.connect_robust(
+    f"amqp://meow:{rabbitmq_pwd}@127.0.0.1/"
+)
 ```
