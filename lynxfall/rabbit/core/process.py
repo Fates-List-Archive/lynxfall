@@ -70,11 +70,20 @@ async def _new_task(queue, state):
             ret = rc.get("ret", rc) if isinstance(rc, dict) else rc
             del state.tasks_running[id]
         
-            if isinstance(rc, Exception):
+            if isinstance(rc, Exception) or isinstance(ret, Exception):
                 await state.on_error(state, logger, message, rc, "task_error", "th_ret_exc")
                 
                 if not ackall: # If not a ackall task, then we raise the exception
-                    raise rc
+                    if isinstance(rc, Exception):
+                        raise rc
+                    else:
+                        raise ret
+                    
+                else:
+                    if isinstance(ret, Exception):
+                        ret = f"{type(ret).__name__}: {ret}"
+                    else:
+                        rc = f"{type(rc).__name__}: {rc}"
             
             _ret = {"ret": serialize(ret), "err": err}
 
