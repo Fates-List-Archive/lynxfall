@@ -31,5 +31,9 @@ async def prepare_func(state, logger):
     """Do any custom preparations here"""
     pass
 
+async def stop_func(state, logger):
+    """Do on stop stuff here"""
+    pass
+
 run()
 ```
