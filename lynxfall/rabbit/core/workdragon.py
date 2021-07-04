@@ -9,6 +9,8 @@ Workdragon will have a redis pubsub protocol for external management
 
 Support for windows/mac is not planned as of right now.
 """
+import os
+import subprocess
 
 class Worker():
     def __init__(self, worker_num, process):
@@ -23,5 +25,6 @@ class WorkDragon():
     def new_worker(self):
         proc = subprocess.Popen(['python3', '-u', launcher],
             stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT
+            stderr=subprocess.STDOUT,
+            env=dict(os.environ, LYNXFALL_WORKER_NUM=str(len(self.workers) + 1))
         )
