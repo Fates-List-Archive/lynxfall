@@ -2,6 +2,7 @@
 """Lynxfall Task Handling using rabbitmq (simple rabbitmq workers)"""
 import asyncio
 import importlib
+from loguru import logger
 from lynxfall.rabbit.core.process import run_worker, disconnect_worker
 
 async def _runner():
@@ -11,7 +12,7 @@ async def _runner():
         except KeyboardInterrupt:
             return
         except:
-            raise exc
+            logger.exception()
 
 def run(**run_worker_args):
     try:
