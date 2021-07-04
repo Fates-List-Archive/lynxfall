@@ -6,3 +6,4 @@ pydantic
 orjson
 loguru
 nest_asyncio
+cython
