@@ -26,8 +26,8 @@ import aioredis
 import aio_pika
 
 async def on_startup(state, logger):
-    state.redis = aioredis.from_url(...)
-    state.rabbit = aio_pika.connect_robust(...)
+    state.redis = await aioredis.from_url(...)
+    state.rabbit = await aio_pika.connect_robust(...)
 
 async def on_prepare(state, logger):
     """Do any custom preparations here"""
