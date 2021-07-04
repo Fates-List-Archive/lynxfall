@@ -3,12 +3,22 @@ import aio_pika
 import aioredis
 from loguru import logger
 import nest_asyncio
-import builtins
 import orjson
 from lynxfall.rabbit.core.backends import Backends
 from lynxfall.utils.string import secure_strcmp
 import time
 nest_asyncio.apply()
+
+class WorkerState():
+    """
+    Stores worker state
+    - worker_key (the worker key)
+    - rabbit (rabbit)
+    - redis (redis)
+    """
+    pass
+
+state = WorkerState()
 
 def serialize(obj):
     try:
@@ -113,32 +123,38 @@ class Stats():
             s.append(f"{k}: {self.__dict__[k]}")
         return "\n".join(s)
 
-class WorkerState():
-    """
-    Stores worker state
-    - worker_key (the worker key)
-    """
-    pass
-
 async def run_worker(
     *, 
     worker_key,
     backend_folder,
-    startup_func,
-    prepare_func
+    on_startup,
+    on_prepare,
+    on_stop
 ):
     """Main worker function"""
-    state = WorkerState()
-    builtins.state = state
     state.worker_key = worker_key
-    await startup_func(state, logger)
+    state.on_startup = on_startup
+    state.on_prepare = on_prepare
+    state.on_stop = on_stop
+    
+    await state.on_startup(state, logger)
+    
+    if not getattr(state, "rabbit"):
+        raise Exception("on_startup must initialize rabbit as state.rabbit")
+        
+    if not getattr(state, "redis"):
+        raise Exception("on_startup must initialize redis as state.redis")
+        
     state.start_time = time.time()
+    
     # Import all needed backends
     state.backends = Backends(backend_folder = backend_folder)
     logger.opt(ansi = True).info(f"<magenta>Starting Lynxfall RabbitMQ Worker (time: {state.start_time})...</magenta>")
+    
     state.stats = Stats()
     await state.backends.loadall(state) # Load all the backends and run prehooks
     await state.backends.load(state, "lynxfall.rabbit.core.default_backends.admin") # Load admin
+    
     # Get handled message count
     total_msgs = await state.redis.get(f"rmq_total_msgs")
     state.stats.total_msgs = int(total_msgs) if total_msgs and isinstance(total_msgs, int) else 0
@@ -151,5 +167,6 @@ async def run_worker(
 
 async def disconnect_worker():
     logger.opt(ansi = True).info("<magenta>RabbitMQ worker down. Killing DB connections!</magenta>")
-    await builtins.state.rabbit.disconnect()
-    await builtins.state.redis.close()
+    await state.stop_func(state, logger)
+    await state.rabbit.disconnect()
+    await state.redis.close()
