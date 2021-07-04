@@ -12,7 +12,7 @@ async def _runner():
         except KeyboardInterrupt:
             return
         except:
-            logger.exception()
+            logger.exception("Something happened and the worker was forced to shut down!")
 
 def run(**run_worker_args):
     try:
@@ -30,5 +30,5 @@ def run(**run_worker_args):
             loop.run_until_complete(disconnect_worker())
         except Exception:
             pass
-    except Exception as exc:
-        logger.exception()
+    except Exception:
+        logger.exception("Something happened and the worker was forced to shut down!")
