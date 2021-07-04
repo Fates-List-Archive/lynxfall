@@ -24,5 +24,8 @@ Next, create a file called rabbitmq_worker.py and put the following code in it:
 from lynxfall.rabbit.launcher import run
 
 async def startup_func(state, logger):
-    pass
+    state.redis = ...
+    state.rabbit = ...
+
+run()
 ```
