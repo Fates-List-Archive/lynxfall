@@ -33,7 +33,7 @@ class WorkDragon():
             if int(wnum) in self.workers_to_log and self.log_workers:
                 print(f"{wnum}: {line}", end='')
         
-    def new_worker(self):
+    def new_worker(self): 
         wnum = len(self.workers) + 1
         proc = subprocess.Popen(['python3', '-u', self.launcher],
             stdout=subprocess.PIPE,
