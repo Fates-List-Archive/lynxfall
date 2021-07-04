@@ -50,8 +50,13 @@ Update the ...'s in the aioredis and aio_pika connection lines with your databas
 
 ```py
 
-redis = await aioredis.from_url('redis://localhost:12348', db = 1)
-rabbit = await aio_pika.connect_robust(
+state.redis = await aioredis.from_url('redis://localhost:12348', db = 1)
+state.rabbit = await aio_pika.connect_robust(
     "amqp://meow:RABBITMQ_PWD@127.0.0.1/"
 )
 ```
+
+
+##### Explanation
+
+on_startup - the function that is called right before the worker starts preparing and begins to actually run. This function must set state.rabbit and state.redis as seen above
