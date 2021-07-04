@@ -35,7 +35,7 @@ class WorkDragon():
         
     def new_worker(self):
         wnum = len(self.workers) + 1
-        proc = subprocess.Popen(['python3', '-u', launcher],
+        proc = subprocess.Popen(['python3', '-u', self.launcher],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             env=dict(os.environ, LYNXFALL_WORKER_NUM=str(wnum))
