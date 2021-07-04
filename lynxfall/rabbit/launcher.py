@@ -31,4 +31,4 @@ def run(**run_worker_args):
         except Exception:
             pass
     except Exception as exc:
-        print(f"{type(exc).__name__}: {exc}")
+        logger.exception()
