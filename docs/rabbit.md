@@ -23,15 +23,15 @@ Next, create a file called rabbitmq_worker.py and put the following code in it:
 
 from lynxfall.rabbit.launcher import run
 
-async def startup_func(state, logger):
+async def on_startup(state, logger):
     state.redis = ...
     state.rabbit = ...
 
-async def prepare_func(state, logger):
+async def on_prepare(state, logger):
     """Do any custom preparations here"""
     pass
 
-async def stop_func(state, logger):
+async def on_stop(state, logger):
     """Do on stop stuff here"""
     pass
 
