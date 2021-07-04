@@ -89,7 +89,7 @@ async def _new_task(queue, state):
 
             if _json["meta"].get("ret"):
                 key = f"lynxrabbit:{_json['meta'].get('ret')}"
-                logger.debug(f"Saving to {key}")
+                logger.debug(f"Saving return to {key}")
                 
                 try:
                     await state.redis.set(key, orjson.dumps(_ret), ex = 60*2) # Save return code in redis
@@ -154,8 +154,9 @@ class TaskHandler():
         
         except Exception as exc:
             await state.on_error(state, logger, None, exc, "task_error", "failed_with_exc")
-            state.stats.errors += 1 # Record new error
-            state.stats.exc.append(exc)
+            await state.redis.incr("rmq_error_count")
+            state.stats[self.dict["task_id"]] = exc
+            
             raise exc
 
 class Stats():
