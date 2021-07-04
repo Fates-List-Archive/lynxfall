@@ -27,5 +27,9 @@ async def startup_func(state, logger):
     state.redis = ...
     state.rabbit = ...
 
+async def prepare_func(state, logger):
+    """Do any custom preparations here"""
+    pass
+
 run()
 ```
