@@ -26,13 +26,14 @@ class WorkDragon():
         self.log_workers = True
         self.workers_to_log = []
     
-    def worker_log(self, proc):
-        for line in iter(proc.stdout.readline, b''):
-            line = line.decode('utf-8')
-            wnum = proc.env["LYNXFALL_WORKER_NUM"]
-            if int(wnum) in self.workers_to_log and self.log_workers:
-                print(f"{wnum}: {line}", end='')
-        
+    def worker_log(self, wnum):
+        def _log(proc):
+            for line in iter(proc.stdout.readline, b''):
+                line = line.decode('utf-8')
+                if int(wnum) in self.workers_to_log and self.log_workers:
+                    print(f"{wnum}: {line}", end='')
+        return _log
+    
     def new_worker(self): 
         wnum = len(self.workers) + 1
         proc = subprocess.Popen(['python3', '-u', self.launcher],
@@ -40,6 +41,6 @@ class WorkDragon():
             stderr=subprocess.STDOUT,
             env=dict(os.environ, LYNXFALL_WORKER_NUM=str(wnum))
         )
-        t = threading.Thread(target=self.worker_log, args=(proc,))
+        t = threading.Thread(target=self.worker_log(wnum), args=(proc,))
         t.start()
-        self.workers.append(Worker(wnum, proc, thread))
+        self.workers.append(Worker(wnum, proc, t))
