@@ -35,5 +35,11 @@ async def on_stop(state, logger):
     """Do on stop stuff here"""
     pass
 
-run(worker_key = worker_key, backend_folder = "my backend/tasks folder", on_startup = on_startup, on_prepare = on_prepare, on_stop = on_stop)
+run(
+    worker_key = worker_key, 
+    backend_folder = "my backend/tasks folder",
+    on_startup = on_startup, 
+    on_prepare = on_prepare, 
+    on_stop = on_stop
+)
 ```
