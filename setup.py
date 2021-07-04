@@ -13,6 +13,7 @@ setup(
     ]),
     packages=[
         "lynxfall", 
+        "lynxfall.core",
         "lynxfall.mdextend",
         "lynxfall.utils",
         "lynxfall.ratelimits",
