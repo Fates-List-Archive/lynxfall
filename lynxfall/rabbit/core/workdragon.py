@@ -42,5 +42,6 @@ class WorkDragon():
             env=dict(os.environ, LYNXFALL_WORKER_NUM=str(wnum))
         )
         t = threading.Thread(target=self.worker_log(wnum), args=(proc,))
+        self.workers_to_log.append(wnum)
         t.start()
         self.workers.append(Worker(wnum, proc, t))
