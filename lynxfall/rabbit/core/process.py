@@ -56,9 +56,11 @@ async def _new_task(queue, state):
         _task_handler = TaskHandler(_json, queue)
         rc, err = await _task_handler.handle(state)
         if isinstance(rc, Exception):
+            await state.on_error(state, logger, message, rc, "task_error", "th_ret_exc")
             logger.warning(f"{type(rc).__name__}: {rc} (JSON of {_json})")
             rc = f"{type(rc).__name__}: {rc}"
             state.stats.err_msgs.append(message) # Mark the failed message so we can ack it later    
+            
         _ret = {"ret": serialize(rc), "err": err}
 
         if _json["meta"].get("ret"):
@@ -66,7 +68,8 @@ async def _new_task(queue, state):
             logger.debug(f"Saving to {key}")
             try:
                 await state.redis.set(key, orjson.dumps(_ret), ex = 60*2) # Save return code in redis
-            except Exception:
+            except Exception as exc:
+                await state.on_error(state, logger, message, exc, "serialize_error", "json_error")
                 try:
                     extra = str(_ret["ret"])
                     
@@ -105,12 +108,17 @@ class TaskHandler():
         try:
             handler = state.backends.get(self.queue)
             rc = await handler(state, self.dict, **self.ctx)
+            
             if isinstance(rc, tuple):
                 return rc[0], rc[1]
+            
             elif isinstance(rc, Exception):
+                await state.on_error(state, logger, None, rc, "task_error", "ret_exc")
                 return rc, True
+            
             return rc, False
         except Exception as exc:
+            await state.on_error(state, logger, None, exc, "task_error", "failed_with_exc")
             state.stats.errors += 1 # Record new error
             state.stats.exc.append(exc)
             return exc, True
@@ -151,6 +159,7 @@ async def run_worker(
     on_startup,
     on_prepare,
     on_stop,
+    on_error,
     monitor = True
 ):
     """Main worker function"""
@@ -158,6 +167,7 @@ async def run_worker(
     state.on_startup = on_startup
     state.on_prepare = on_prepare
     state.on_stop = on_stop
+    state.on_error = on_error
     
     await state.on_startup(state, logger)
     
@@ -183,8 +193,10 @@ async def run_worker(
     total_msgs = await state.redis.get(f"rmq_total_msgs")
     state.stats.total_msgs = int(total_msgs) if total_msgs and isinstance(total_msgs, int) else 0
     state.preparations = await state.on_prepare(state, logger) if state.on_prepare else None
+    
     for backend in state.backends.getall():
         await _new_task(backend, state)
+        
     state.end_time = time.time()
     state.load_time = state.end_time - state.start_time
     logger.opt(ansi = True).info(f"<magenta>Worker up in {state.end_time - state.start_time} seconds at time {state.end_time}!</magenta>")
