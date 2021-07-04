@@ -31,7 +31,7 @@ def _exec_op(op):
 
 class Config:
     queue = "_admin"
-    name = "Admin Task"
+    name = "Admin/Monitoring Backend"
     description = "Perform/Evaluate commands in Lynxfall worker for debugging."
     ackall = True
 
