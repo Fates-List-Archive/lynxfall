@@ -21,7 +21,9 @@ async def add_rmq_task(queue_name: str, data: dict, **meta):
     if not RabbitClient.worker_key or not RabbitClient.redis or not RabbitClient.rabbit:
         raise Exception("You must set worker key, redis and redis using set before using this!")
     if meta:
-        meta = deepcopy(RMQ_META) | meta
+        _meta = deepcopy(RMQ_META)
+        _meta.update(meta)
+        meta = _meta
     else:
         meta = RMQ_META
     channel = await RabbitClient.rabbit.channel()
