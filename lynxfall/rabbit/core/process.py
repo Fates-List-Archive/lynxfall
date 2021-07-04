@@ -8,6 +8,7 @@ from lynxfall.rabbit.core.backends import Backends
 from lynxfall.utils.string import secure_strcmp
 from lynxfall.core.classes import Singleton
 import time
+import sys
 nest_asyncio.apply()
     
 class WorkerState(Singleton):
@@ -172,10 +173,12 @@ async def run_worker(
     await state.on_startup(state, logger)
     
     if not getattr(state, "rabbit"):
-        raise Exception("on_startup must initialize rabbit as state.rabbit")
+        print("on_startup must initialize rabbit as state.rabbit")
+        sys.exit(-1)
         
     if not getattr(state, "redis"):
-        raise Exception("on_startup must initialize redis as state.redis")
+        print("on_startup must initialize redis as state.redis")
+        sys.exit(-1)
         
     state.start_time = time.time()
     
