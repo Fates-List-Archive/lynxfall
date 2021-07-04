@@ -159,7 +159,7 @@ async def run_worker(
     # Get handled message count
     total_msgs = await state.redis.get(f"rmq_total_msgs")
     state.stats.total_msgs = int(total_msgs) if total_msgs and isinstance(total_msgs, int) else 0
-    state.prepare_rc = await prepare_func(state, logger) if prepare_func else None
+    state.preparations = await state.on_prepare(state, logger) if state.on_prepare else None
     for backend in state.backends.getall():
         await _new_task(backend, state)
     state.end_time = time.time()
@@ -168,6 +168,6 @@ async def run_worker(
 
 async def disconnect_worker():
     logger.opt(ansi = True).info("<magenta>RabbitMQ worker down. Killing DB connections!</magenta>")
-    await state.stop_func(state, logger)
+    await state.on_stop(state, logger)
     await state.rabbit.disconnect()
     await state.redis.close()
