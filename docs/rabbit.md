@@ -59,6 +59,8 @@ state.rabbit = await aio_pika.connect_robust(
 
 ##### Explanation
 
-on_startup - the function that is called right before the worker starts preparing and begins to actually run. This function must set state.rabbit and state.redis as seen above
+on_startup - the function (coroutine) that is called right before the worker starts preparing and begins to actually run. This function must set state.rabbit and state.redis as seen above
 
-on_stop - the function that is called when the worker disconnects so you can close db connections. Note than redis and rabbitmq is already closed for you after on_stop is called
+on_prepare - the function (coroutine) that is called in between on_start and fully running. Use this to do stuff like waiting for a discord bot to come ready etc. etc.
+
+on_stop - the function (coroutine) that is called when the worker disconnects so you can close db connections. Note than redis and rabbitmq is already closed for you after on_stop is called
