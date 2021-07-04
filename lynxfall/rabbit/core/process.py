@@ -7,6 +7,7 @@ import orjson
 from lynxfall.rabbit.core.backends import Backends
 from lynxfall.utils.string import secure_strcmp
 from lynxfall.core.classes import Singleton
+from lynxfall.rabbit.client import RabbitClient # Patch for rabbitmq
 import time
 import sys
 nest_asyncio.apply()
@@ -179,8 +180,10 @@ async def run_worker(
     if not getattr(state, "redis"):
         print("on_startup must initialize redis as state.redis")
         sys.exit(-1)
-        
+    
     state.start_time = time.time()
+    
+    RabbitClient.setup(worker_key, state.redis, state.rabbit) # Some workers may want to make a new task. Allow this
     
     # Import all needed backends
     state.backends = Backends(backend_folder = backend_folder)
