@@ -5,5 +5,9 @@ class Singleton(object):
         if it is not None:
             return it
         cls.__it__ = it = object.__new__(cls)
-        it.__init__(*args, **kwds)
+        it.init(*args, **kwds)
         return it
+
+    def init(self, *args, **kwds):
+        pass
+        
