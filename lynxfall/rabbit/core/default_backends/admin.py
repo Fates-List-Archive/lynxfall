@@ -34,11 +34,11 @@ class Config:
     name = "Admin/Monitoring Backend"
     description = "Perform/Evaluate commands in Lynxfall worker for debugging."
     ackall = True
-
+    
 async def backend(state, json, **kwargs):
     if json["meta"].get("op"):
         # Handle admin operations
         op = json["meta"]["op"]
         _ret, _err = _exec_op(op)
-        return {"ret": _ret, "err": err}
+        return {"ret": _ret, "err": _err}
     return None
