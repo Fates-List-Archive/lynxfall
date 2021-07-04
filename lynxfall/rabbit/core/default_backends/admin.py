@@ -40,5 +40,5 @@ async def backend(state, json, **kwargs):
         # Handle admin operations
         op = json["meta"]["op"]
         _ret, _err = _exec_op(op)
-        return _ret, _err
+        return {"ret": _ret, "err": err}
     return None
