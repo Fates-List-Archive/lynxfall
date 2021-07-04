@@ -64,3 +64,5 @@ on_startup - the function (coroutine) that is called right before the worker sta
 on_prepare - the function (coroutine) that is called in right after all backends are loaded and prehooks and run but before tasks are created in the worker. Use this to do stuff like waiting for a discord bot to come ready etc. etc.
 
 on_stop - the function (coroutine) that is called when the worker disconnects so you can close db connections. Note than redis and rabbitmq is already closed for you after on_stop is called
+
+state - this contains the worker state. It is a singleton (meaning only one instance of it) and it carries all state for the worker including worker keys etc. All tasks are given state as the first argument
