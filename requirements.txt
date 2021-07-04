@@ -4,3 +4,5 @@ aio_pika
 fastapi
 pydantic
 orjson
+loguru
+nest_asyncio
