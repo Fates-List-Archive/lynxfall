@@ -14,12 +14,14 @@ import subprocess
 import threading
 
 class Worker():
+    """Represents a worker"""
     def __init__(self, worker_num, process, thread):
         self.process = process
         self.worker_num = worker_num
         self.thread = thread
     
 class WorkDragon():
+    """WorkDragon main class"""
     def __init__(self, launcher):
         self.workers = []
         self.launcher = launcher
@@ -27,6 +29,7 @@ class WorkDragon():
         self.workers_to_log = []
     
     def worker_log(self, wnum):
+        """Returns worker log function"""
         def _log(proc):
             for line in iter(proc.stdout.readline, b''):
                 line = line.decode('utf-8')
@@ -35,6 +38,7 @@ class WorkDragon():
         return _log
     
     def new_worker(self): 
+        """Creates a new worker"""
         wnum = len(self.workers) + 1
         proc = subprocess.Popen(['python3', '-u', self.launcher],
             stdout=subprocess.PIPE,
