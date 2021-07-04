@@ -62,7 +62,9 @@ async def _new_task(queue, state):
         _ret = {"ret": serialize(rc), "err": err}
 
         if _json["meta"].get("ret"):
-            await state.redis.set(f"rabbit-{_json['meta'].get('ret')}", orjson.dumps(_ret)) # Save return code in redis
+            key = f"lynxrabbit:{_json['meta'].get('ret')}"
+            logger.debug(f"Saving to {key}")
+            await state.redis.set(key, orjson.dumps(_ret)) # Save return code in redis
 
         if state.backends.ackall(queue) or not _ret["err"]: # If no errors recorded
             message.ack()
