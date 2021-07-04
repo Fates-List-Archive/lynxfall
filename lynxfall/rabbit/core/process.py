@@ -75,9 +75,6 @@ async def _new_task(queue, state):
                 
                 if not ackall: # If not a ackall task, then we raise the exception
                     raise rc
-                    
-                else:
-                    rc = f"{type(rc).__name__}: {rc}"
             
             _ret = {"ret": serialize(ret), "err": err}
 
