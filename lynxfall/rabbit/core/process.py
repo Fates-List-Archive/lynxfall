@@ -10,7 +10,7 @@ from lynxfall.core.classes import Singleton
 import time
 nest_asyncio.apply()
     
-class WorkerState(metaclass=Singleton):
+class WorkerState(Singleton):
     """
     Stores worker state
     - worker_key (the worker key)
