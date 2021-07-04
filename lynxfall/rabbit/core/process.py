@@ -59,7 +59,8 @@ async def _new_task(queue, state):
 
         # Normally handle rabbitmq task
         id = uuid.uuid4()
-        state.tasks_running[id] = True
+        _json["task_id"] = id
+        state.tasks_running[id] = (_json, _headers, queue)
         _task_handler = TaskHandler(_json, queue)
         rc, err = await _task_handler.handle(state)
         del state.tasks_running[id]
