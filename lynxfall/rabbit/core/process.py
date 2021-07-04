@@ -6,9 +6,10 @@ import nest_asyncio
 import orjson
 from lynxfall.rabbit.core.backends import Backends
 from lynxfall.utils.string import secure_strcmp
+from lynxfall.core import Singleton
 import time
 nest_asyncio.apply()
-
+    
 class WorkerState():
     """
     Stores worker state
