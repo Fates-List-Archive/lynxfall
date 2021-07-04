@@ -197,6 +197,7 @@ async def run_worker(
     state.stats.total_msgs = int(total_msgs) if total_msgs and isinstance(total_msgs, int) else 0
     state.preparations = await state.on_prepare(state, logger) if state.on_prepare else None
     
+    logger.opt(ansi = True).debug("Stats setup is done")
     for backend in state.backends.getall():
         await _new_task(backend, state)
         
