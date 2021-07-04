@@ -150,7 +150,8 @@ async def run_worker(
     backend_folder,
     on_startup,
     on_prepare,
-    on_stop
+    on_stop,
+    prod = False
 ):
     """Main worker function"""
     state.worker_key = worker_key
@@ -174,7 +175,9 @@ async def run_worker(
     
     state.stats = Stats()
     await state.backends.loadall(state) # Load all the backends and run prehooks
-    await state.backends.load(state, "lynxfall.rabbit.core.default_backends.admin") # Load admin
+    
+    if not prod:
+        await state.backends.load(state, "lynxfall.rabbit.core.default_backends.admin") # Load admin
     
     # Get handled message count
     total_msgs = await state.redis.get(f"rmq_total_msgs")
