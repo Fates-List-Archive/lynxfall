@@ -67,6 +67,7 @@ async def _new_task(queue, state):
             _task_handler = TaskHandler(_json, queue)
             rc = await _task_handler.handle(state)
             err = rc.get("err") if isinstance(rc, dict) else False
+            ret = rc.get("ret", rc) if isinstance(rc, dict) else rc
             del state.tasks_running[id]
         
             if isinstance(rc, Exception):
@@ -78,7 +79,7 @@ async def _new_task(queue, state):
                 else:
                     rc = f"{type(rc).__name__}: {rc}"
             
-            _ret = {"ret": serialize(rc), "err": err}
+            _ret = {"ret": serialize(ret), "err": err}
 
             if _json["meta"].get("ret"):
                 key = f"lynxrabbit:{_json['meta'].get('ret')}"
