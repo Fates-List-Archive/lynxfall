@@ -32,7 +32,7 @@ def _exec_op(op):
 class Config:
     queue = "_admin"
     name = "Admin Task"
-    description = "Perform/Evaluate commands in RabbitMQ worker for debugging. Note that this is not the same as the status protocol"
+    description = "Perform/Evaluate commands in Lynxfall worker for debugging."
     ackall = True
 
 async def backend(state, json, **kwargs):
