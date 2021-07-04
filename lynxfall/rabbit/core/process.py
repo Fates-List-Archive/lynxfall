@@ -151,7 +151,7 @@ async def run_worker(
     on_startup,
     on_prepare,
     on_stop,
-    prod = False
+    monitor = True
 ):
     """Main worker function"""
     state.worker_key = worker_key
@@ -176,7 +176,7 @@ async def run_worker(
     state.stats = Stats()
     await state.backends.loadall(state) # Load all the backends and run prehooks
     
-    if not prod:
+    if monitor:
         await state.backends.load(state, "lynxfall.rabbit.core.default_backends.admin") # Load admin
     
     # Get handled message count
