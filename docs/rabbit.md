@@ -15,7 +15,7 @@ The below sections will deal with creating these two things.
 
 #### The Launcher File
 
-For extra security, you will need to first make a random secret called the worker key. You can use any random string generator to do this. Note that if this key is ever cracked or leaked, attackers may be able to gain arbitary code execution on your worker, so keep the worker key safe.
+For extra security, you will need to first make a random secret called the worker key. You can use any random string generator to do this. Note that if this key is ever cracked or leaked, attackers may be able to gain arbitary code execution on your worker, so keep the worker key safe, preferrably in a .env file
 
 Next, create a file called rabbitmq_worker.py and put the following code in it:
 
@@ -35,5 +35,5 @@ async def on_stop(state, logger):
     """Do on stop stuff here"""
     pass
 
-run()
+run(worker_key = worker_key, backend_folder = "my backend/tasks folder")
 ```
