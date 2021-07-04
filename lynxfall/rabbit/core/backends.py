@@ -4,8 +4,9 @@
 import importlib
 import os
 from loguru import logger
+from lynxfall.core.classes import Singleton
 
-class Backends():
+class Backends(Singleton):
     def __init__(self, backend_folder = "rabbitmq/backend"):
         self.rmq_backends = {}
         self.backend_folder = backend_folder
