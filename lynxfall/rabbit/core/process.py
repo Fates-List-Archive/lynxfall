@@ -35,70 +35,89 @@ def serialize(obj):
             return str(obj)
 
 async def _new_task(queue, state):
-    logger.debug("In new task")
     friendly_name = state.backends.getname(queue)
     _channel = await state.rabbit.channel()
     _queue = await _channel.declare_queue(queue, durable = True) # Function to handle our queue
+    ackall = state.backends.ackall(queue)
     async def _task(message: aio_pika.IncomingMessage):
         """RabbitMQ Queue Function"""
-        curr = state.stats.on_message
-        logger.opt(ansi = True).info(f"<m>{friendly_name} called (message {curr})</m>")
-        state.stats.on_message += 1
-        _json = orjson.loads(message.body)
-        _headers = message.headers
+        ran = True
         
-        if not _headers:
-            logger.error(f"Invalid auth for {friendly_name}")
-            message.ack()
-            return # No valid auth sent
+        try:
+            curr = state.stats.on_message
+            logger.opt(ansi = True).info(f"<m>{friendly_name} called (message {curr})</m>")
+            state.stats.on_message += 1
+            _json = orjson.loads(message.body)
+            _headers = message.headers
         
-        if not secure_strcmp(_headers.get("auth"), state.worker_key):
-            logger.error(f"Invalid auth for {friendly_name} and JSON of {_json}")
-            message.ack()
-            return # No valid auth sent
+            if not _headers:
+                logger.error(f"Invalid auth for {friendly_name}")
+                message.ack()
+                return # No valid auth sent
+        
+            if not secure_strcmp(_headers.get("auth"), state.worker_key):
+                logger.error(f"Invalid auth for {friendly_name} and JSON of {_json}")
+                message.ack()
+                return # No valid auth sent
 
-        # Normally handle rabbitmq task
-        id = uuid.uuid4()
-        _json["task_id"] = id
-        state.tasks_running[id] = (_json, _headers, queue)
-        _task_handler = TaskHandler(_json, queue)
-        rc, err = await _task_handler.handle(state)
-        del state.tasks_running[id]
+            # Normally handle rabbitmq task
+            id = uuid.uuid4()
+            _json["task_id"] = id
+            state.tasks_running[id] = (_json, _headers, queue)
+            _task_handler = TaskHandler(_json, queue)
+            rc, err = await _task_handler.handle(state)
+            del state.tasks_running[id]
         
-        if isinstance(rc, Exception):
-            await state.on_error(state, logger, message, rc, "task_error", "th_ret_exc")
-            logger.warning(f"{type(rc).__name__}: {rc} (JSON of {_json})")
-            rc = f"{type(rc).__name__}: {rc}"
-            state.stats.err_msgs.append(message) # Mark the failed message so we can ack it later    
+            if isinstance(rc, Exception):
+                await state.on_error(state, logger, message, rc, "task_error", "th_ret_exc")
+                
+                if not ackall: # If not a ackall task, then we raise the exception
+                    raise rc
+                    
+                else:
+                    rc = f"{type(rc).__name__}: {rc}"
             
-        _ret = {"ret": serialize(rc), "err": err}
+            _ret = {"ret": serialize(rc), "err": err}
 
-        if _json["meta"].get("ret"):
-            key = f"lynxrabbit:{_json['meta'].get('ret')}"
-            logger.debug(f"Saving to {key}")
-            try:
-                await state.redis.set(key, orjson.dumps(_ret), ex = 60*2) # Save return code in redis
-            except Exception as exc:
-                await state.on_error(state, logger, message, exc, "serialize_error", "json_error")
+            if _json["meta"].get("ret"):
+                key = f"lynxrabbit:{_json['meta'].get('ret')}"
+                logger.debug(f"Saving to {key}")
+                
                 try:
-                    extra = str(_ret["ret"])
+                    await state.redis.set(key, orjson.dumps(_ret), ex = 60*2) # Save return code in redis
                     
-                except Exception:
-                    extra = "No extra info available"
+                except Exception as exc:
+                    await state.on_error(state, logger, message, exc, "serialize_error", "json_error")
                     
-                _ret["ret"] = f"Could not save return in json: {extra}"
-                _ret["err"] = True
-                try:
-                    await state.redis.set(key, orjson.dumps(_ret), ex = 60*2) # Save error code in redis
+                    try:
+                        extra = str(_ret["ret"])
                     
-                except Exception:
-                    extra = "No extra info available"
+                    except Exception:
+                        extra = "No extra info available"
+                    
                     _ret["ret"] = f"Could not save return in json: {extra}"
                     _ret["err"] = True
-                    await state.redis.set(key, orjson.dumps(_ret), ex = 60*2) # Save error code in redis
                     
-        if state.backends.ackall(queue) or not _ret["err"]: # If no errors recorded
+                    try:
+                        await state.redis.set(key, orjson.dumps(_ret), ex = 60*2) # Save error code in redis
+                    
+                    except Exception:
+                        extra = "No extra info available"
+                        
+                        _ret["ret"] = f"Could not save return in json: {extra}"
+                        _ret["err"] = True
+                        
+                        await state.redis.set(key, orjson.dumps(_ret), ex = 60*2) # Save error code in redis
+               
+        except Exception as exc:
+            logger.exception()
+            await state.on_error(state, logger, message, exc, "runtime_error", "unknown")
+            state.stats.err_msgs.append(message) # Mark the failed message so we can ack it later
+            ran = False
+            
+        if ran: # If no errors recorded
             message.ack()
+                
         logger.opt(ansi = True).info(f"<m>Message {curr} Handled</m>")
         logger.debug(f"Message JSON of {_json}")
         await state.redis.incr(f"rmq_total_msgs", 1)
@@ -124,14 +143,15 @@ class TaskHandler():
             
             elif isinstance(rc, Exception):
                 await state.on_error(state, logger, None, rc, "task_error", "ret_exc")
-                return rc, True
+                raise rc
             
-            return rc, False
+            return rc
+        
         except Exception as exc:
             await state.on_error(state, logger, None, exc, "task_error", "failed_with_exc")
             state.stats.errors += 1 # Record new error
             state.stats.exc.append(exc)
-            return exc, True
+            raise exc
 
 class Stats():
     def __init__(self):
@@ -216,6 +236,7 @@ async def run_worker(
     state.end_time = time.time()
     state.load_time = state.end_time - state.start_time
     logger.opt(ansi = True).info(f"<magenta>Worker up in {state.end_time - state.start_time} seconds at time {state.end_time}!</magenta>")
+    return state
 
 async def disconnect_worker():
     logger.opt(ansi = True).info("<magenta>RabbitMQ worker down. Killing DB connections!</magenta>")
