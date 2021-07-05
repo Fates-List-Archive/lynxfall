@@ -3,6 +3,11 @@ from itsdangerous import URLSafeSerializer
 from aioredis import Connection
 
 class BaseOauth():
+    IDENTIFIER = "base"
+    AUTHORIZE_URL = "https://example.com/api/oauth2/authorize"
+    TOKEN_URL = "https://example.com/api/oauth2/token"
+    API_URL = "https://example.com/api"
+    
     def __init__(self, auth_jwt_key: str, oc: OauthConfig, redis: Connection):
         self.auth_s = URLSafeSerializer(auth_jwt_key, "auth")
         self.client_id = oc.client_id
