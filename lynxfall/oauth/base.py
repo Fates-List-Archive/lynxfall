@@ -54,6 +54,33 @@ class BaseOauth():
                     raise OauthRequestError("Could not make oauth request, recheck your client_secret")
                 json = await res.json()
                 return json | {"current_time": time.time()}
+            
+    async def _generic_at(self, code: str, grant_type: str, redirect_uri: str, scopes: str) -> AccessToken:
+        """Generic access token handling"""
+        payload = {
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
+            "grant_type": grant_type,
+            "code": code,
+            "redirect_uri": redirect_uri,
+            "scope": scopes
+        }
+        
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+        
+        json = await self._request(self.TOKEN_URL, payload, headers)
+        
+        return AccessToken(
+            identifier = self.IDENTIFIER,
+            redirect_uri = redirect_uri,
+            access_token = json["access_token"],
+            refresh_token = json["refresh_token"],
+            expires_in = json["expires_in"],
+            current_time = json["current_time"],
+            scopes = scopes
+        )
     
     async def get_access_token(
         self, 
@@ -74,7 +101,7 @@ class BaseOauth():
                 f"Invalid state provided. Please try logging in again using {login_retry_url}"
             )
         
-        oauth = await redis_db.get(f"oauth-{state_id}")
+        oauth = await self.redis.get(f"oauth-{state_id}")
         if not oauth:
             raise OauthStateError(
                 f"Invalid state. There is no oauth data associated with this state. Please try logging in again using {login_retry_url}"
@@ -82,45 +109,22 @@ class BaseOauth():
 
         oauth = orjson.loads(oauth)
         
-        redirect_uri = 
         scopes = self.get_scopes(oauth["scopes"])
 
-        return await _generic_at(code, "authorization_code", oauth["redirect_uri"], oauth["scopes"])
-    
-    async def _generic_at(self, code: str, grant_type: str, redirect_uri: str, scopes: str) -> AccessToken:
-        """Generic access token handling"""
-        payload = {
-            "client_id": self.client_id,
-            "client_secret": self.client_secret,
-            "grant_type": grant_type,
-            "code": code,
-            "redirect_uri": redirect_uri,
-            "scope": scopes
-        }
-        
-        headers = {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }
-        
-        json = await self._request(self.TOKEN_URL, payload, headers)
-        return AccessToken(
-            identifier = self.IDENTIFIER,
-            redirect_uri = redirect_uri,
-            access_token = json["access_token"],
-            refresh_token = json["refresh_token"],
-            expires_in = json["expires_in"],
-            current_time = json["current_time"],
-            scopes = scopes
+        return await self._generic_at(
+            code, 
+            "authorization_code",
+            oauth["redirect_uri"], 
+            self.get_scopes(oauth["scopes"])
         )
-        
-    
+           
     async def refresh_access_token(self, access_token: AccessToken) -> str:
-        """Refreshes a access token if expired. If it is not expired, this return the same access token again"""
+        """Refreshes a access token if expired. If it is not expired, this returns the same access token again"""
         if not access_token.expired():
             logger.debug("Using old access token without making any changes")
             return access_token
         
-        return await _generic_at(
+        return await self._generic_at(
             access_token.refresh_token, 
             "refresh_token",
             access_token.redirect_uri, 
