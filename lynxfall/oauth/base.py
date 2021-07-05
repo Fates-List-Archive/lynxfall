@@ -48,7 +48,7 @@ class BaseOauth():
                 json = await res.json()
                 return json | {"current_time": time.time()}
     
-    async def get_access_token(self, code: str, scope: str, redirect_uri: Optional[str] = None) -> dict: 
+    async def get_access_token(self, code: str, scope: str, redirect_uri: Optional[str] = None) -> AccessToken: 
         
         payload = {
             "client_id": self.client_id,
@@ -66,3 +66,27 @@ class BaseOauth():
         redirect_uri = self.redirect_uri if not redirect_uri else redirect_uri
         
         return await self._request(self.TOKEN_URL, payload, headers)
+
+    
+    async def check_access_token(self, scope: str, access_token_dict: dict) -> str:
+        
+        if float(access_token_dict["current_time"]) + float(access_token_dict["expires_in"]) > time.time():
+            logger.debug("Using old access token without making any changes")
+            return access_token_dict
+        # Refresh
+        payload = {
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
+            "grant_type": "refresh_token",
+            "refresh_token": access_token_dict["refresh_token"],
+            "redirect_uri": self.redirect_uri,
+            "scope": scope
+        }
+
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+        async with aiohttp.ClientSession() as sess:
+            async with ss.post(self.discord_token_url, data=payload, headers=headers) as res:
+                json = await res.json()
+                return json | {"current_time": time.time()}
