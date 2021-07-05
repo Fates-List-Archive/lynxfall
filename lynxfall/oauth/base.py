@@ -3,6 +3,7 @@ from itsdangerous import URLSafeSerializer
 from aioredis import Connection
 from lynxfall.oauth.models import OauthConfig, OauthURL
 from lynxfall.oauth.exceptions import OauthRequestError
+import aiohttp
 
 class BaseOauth():
     IDENTIFIER = "base"
