@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 from typing import Union
-import aiohttp
 import time
 
 
