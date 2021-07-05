@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Union
 import aiohttp
+import time
 
 
 # Core models
@@ -26,3 +27,7 @@ class AccessToken(BaseModel):
     expires_in: Union[int, float]
     scope: str
     current_time: Union[int, float]        
+
+    def expired(self):
+        """Returns whether a access token has expired or not"""
+        return float(self.current_time) + float(self.expires_in) > time.time()
