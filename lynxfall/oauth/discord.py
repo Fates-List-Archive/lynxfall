@@ -2,6 +2,7 @@ import secrets
 import string
 import time
 import uuid
+from lynxfall.oauth.base import BaseOauth
 from typing import List, Optional, Union
 
 import aiohttp
