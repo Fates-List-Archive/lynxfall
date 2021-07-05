@@ -45,11 +45,11 @@ class BaseOauth():
             redirect_uri = redirect_uri
         )
 
-    async def _request(self, url, data, headers):
+    async def _request(self, url, **urlargs):
         """Makes a API request using aiohttp"""
         
         async with aiohttp.ClientSession() as sess:
-            async with sess.post(url, data=data, headers=headers) as res:
+            async with sess.post(url, **urlargs) as res:
                 if str(res.status) != "2":
                     raise OauthRequestError("Could not make oauth request, recheck your client_secret")
                     
@@ -74,7 +74,7 @@ class BaseOauth():
             'Content-Type': 'application/x-www-form-urlencoded'
         }
         
-        json = await self._request(self.TOKEN_URL, payload, headers)
+        json = await self._request(self.TOKEN_URL, data=payload, headers=headers)
         
         return AccessToken(
             identifier = self.IDENTIFIER,
