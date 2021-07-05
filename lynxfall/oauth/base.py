@@ -13,7 +13,10 @@ class OauthURL(BaseModel):
     identifier: str
     url: str
     state_id: str
-    redirect_uri: ste
+    redirect_uri: str
+
+class OauthRequestError(Exception):
+    pass
 
 class BaseOauth():
     IDENTIFIER = "base"
