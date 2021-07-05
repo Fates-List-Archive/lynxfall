@@ -8,13 +8,6 @@ from typing import List, Optional, Union
 import aiohttp
 from pydantic import BaseModel
 
-from config import *
-
-
-def get_token(length: str) -> str:
-    secure_str = "".join((secrets.choice(string.ascii_letters + string.digits) for i in range(length)))
-    return secure_str
-
 class DiscordOauth(BaseOauth):
     def __init__(self, oc: OauthConfig):
         self.client_id = oc.client_id
