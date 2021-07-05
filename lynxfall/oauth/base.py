@@ -1,22 +1,8 @@
 from typing import List, Optional
 from itsdangerous import URLSafeSerializer
 from aioredis import Connection
-from pydantic import BaseModel
-
-# Core models
-class OauthConfig(BaseModel):
-    client_id: str
-    client_secret: str
-    redirect_uri: str
-
-class OauthURL(BaseModel):
-    identifier: str
-    url: str
-    state_id: str
-    redirect_uri: str
-
-class OauthRequestError(Exception):
-    pass
+from lynxfall.oauth.models import OauthConfig, OauthURL
+from lynxfall.oauth.exceptions import OauthRequestError
 
 class BaseOauth():
     IDENTIFIER = "base"
