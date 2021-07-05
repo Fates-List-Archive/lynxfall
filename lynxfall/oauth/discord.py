@@ -2,26 +2,29 @@ import secrets
 import string
 import time
 import uuid
-from lynxfall.oauth.base import BaseOauth
+from lynxfall.oauth.base import BaseOauth, OauthConfig
+from aioredis import Connection
 from typing import List, Optional, Union
 
 import aiohttp
 from pydantic import BaseModel
 
 class DiscordOauth(BaseOauth):
-    def __init__(self, auth_jwt_key: str, oc: OauthConfig):
+    """Discord oauth implementation, more in future for guilded etc."""
+    
+    IDENTIFIER = "discord"
+    AUTHORIZE_URL = "https://discord.com/api/oauth2/authorize"
+    TOKEN_URL = "https://discord.com/api/oauth2/token"
+    API_URL = "https://discord.com/api"
+    
+    def __init__(self, auth_jwt_key: str, oc: OauthConfig, redis: Connection):
         self.client_id = oc.client_id
         self.client_secret = oc.client_secret
         self.redirect_uri = oc.redirect_uri
-        self.login_url = f"https://discord.com/api/oauth2/authorize?client_id={self.client_id}&redirect_uri={self.redirect_uri}"
-        self.token_url = "https://discord.com/api/oauth2/token"
-        self.api_url = "https://discord.com/api"
+        self.redis = redis
     
     def get_scopes(self, scopes_lst: list) -> str:
         return "%20".join(scopes_lst)
-
-    def get_oauth(self, id: uuid.UUID, scopes: list):
-        return f"{self.discord_login_url}&state={id}&response_type=code&scope={self.get_scopes(scopes)}"
 
     async def get_access_token(self, code, scope) -> dict:
         payload = {
