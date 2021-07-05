@@ -16,31 +16,6 @@ class DiscordOauth(BaseOauth):
     AUTHORIZE_URL = "https://discord.com/api/oauth2/authorize"
     TOKEN_URL = "https://discord.com/api/oauth2/token"
     API_URL = "https://discord.com/api"
-    
-    def __init__(self, auth_jwt_key: str, oc: OauthConfig, redis: Connection):
-    
-    def get_scopes(self, scopes_lst: list) -> str:
-        return "%20".join(scopes_lst)
-
-    async def get_access_token(self, code, scope) -> dict:
-        payload = {
-            "client_id": self.client_id,
-            "client_secret": self.client_secret,
-            "grant_type": "authorization_code",
-            "code": code,
-            "redirect_uri": self.redirect_uri,
-            "scope": scope
-        }
-
-        headers = {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }
-        async with aiohttp.ClientSession() as sess:
-            async with sess.post(self.token_url, data=payload, headers=headers) as res:
-                if res.status != 200:
-                    return None
-                json = await res.json()
-                return json | {"current_time": time.time()}
 
     async def access_token_check(self, scope: str, access_token_dict: dict) -> str:
         if float(access_token_dict["current_time"]) + float(access_token_dict["expires_in"]) > time.time():
