@@ -3,8 +3,11 @@ from itsdangerous import URLSafeSerializer
 from aioredis import Connection
 from pydantic import BaseModel
 
-class OauthConfig:
-    pass
+# Core models
+class OauthConfig(BaseModel):
+    client_id: str
+    client_secret: str
+    redirect_uri: str
 
 class OauthURL(BaseModel):
     identifier: str
@@ -47,6 +50,15 @@ class BaseOauth():
             redirect_uri = redirect_uri
         )
 
+    async def _request(self, url, data, headers):
+        """Makes a API request using aiohttp"""
+        async with aiohttp.ClientSession() as sess:
+            async with sess.post(url, data=data, headers=headers) as res:
+                if str(res.status) != "2":
+                    raise OauthRequestError("Could not make oauth request, recheck your client_secret")
+                json = await res.json()
+                return json | {"current_time": time.time()}
+    
     async def get_access_token(self, code: str, scope: str, redirect_uri: Optional[str] = None) -> dict: 
         
         payload = {
@@ -64,9 +76,4 @@ class BaseOauth():
         
         redirect_uri = self.redirect_uri if not redirect_uri else redirect_uri
         
-        async with aiohttp.ClientSession() as sess:
-            async with sess.post(self.TOKEN_ENDPOINT, data=payload, headers=headers) as res:
-                if res.status != 200:
-                    return None
-                json = await res.json()
-                return json | {"current_time": time.time()}
+        return await self._request(self.TOKEN_URL, payload, headers)
