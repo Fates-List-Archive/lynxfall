@@ -18,10 +18,6 @@ class DiscordOauth(BaseOauth):
     API_URL = "https://discord.com/api"
     
     def __init__(self, auth_jwt_key: str, oc: OauthConfig, redis: Connection):
-        self.client_id = oc.client_id
-        self.client_secret = oc.client_secret
-        self.redirect_uri = oc.redirect_uri
-        self.redis = redis
     
     def get_scopes(self, scopes_lst: list) -> str:
         return "%20".join(scopes_lst)
