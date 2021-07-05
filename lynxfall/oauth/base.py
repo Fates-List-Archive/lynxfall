@@ -52,6 +52,10 @@ class BaseOauth():
             async with sess.post(url, data=data, headers=headers) as res:
                 if str(res.status) != "2":
                     raise OauthRequestError("Could not make oauth request, recheck your client_secret")
+                    
+                elif res.status == 401:
+                    return OauthRequestError("Oauth endpoint returned 401")
+                
                 json = await res.json()
                 return json | {"current_time": time.time()}
             
