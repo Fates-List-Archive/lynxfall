@@ -82,17 +82,17 @@ class BaseOauth():
 
         oauth = orjson.loads(oauth)
         
-        redirect_uri = oauth["redirect_uri"]
+        redirect_uri = 
         scopes = self.get_scopes(oauth["scopes"])
 
-        return await 
+        return await _generic_at(code, "authorization_code", oauth["redirect_uri"], oauth["scopes"])
     
-    async def _generic_at(self, code, grant_type, redirect_uri, scopes):
+    async def _generic_at(self, code: str, grant_type: str, redirect_uri: str, scopes: str) -> AccessToken:
         """Generic access token handling"""
         payload = {
             "client_id": self.client_id,
             "client_secret": self.client_secret,
-            "grant_type": "authorization_code",
+            "grant_type": grant_type,
             "code": code,
             "redirect_uri": redirect_uri,
             "scope": scopes
@@ -109,29 +109,20 @@ class BaseOauth():
             access_token = json["access_token"],
             refresh_token = json["refresh_token"],
             expires_in = json["expires_in"],
-            current_time = json["current_time"]
+            current_time = json["current_time"],
+            scopes = scopes
         )
         
     
-    async def refresh_access_token(self, scope: str, access_token: AccessToken) -> str:
+    async def refresh_access_token(self, access_token: AccessToken) -> str:
         """Refreshes a access token if expired. If it is not expired, this return the same access token again"""
         if not access_token.expired():
             logger.debug("Using old access token without making any changes")
             return access_token
-        # Refresh
-        payload = {
-            "client_id": self.client_id,
-            "client_secret": self.client_secret,
-            "grant_type": "refresh_token",
-            "refresh_token": access_token["refresh_token"],
-            "redirect_uri": redirect_uri,
-            "scope": scope
-        }
-
-        headers = {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }
-        async with aiohttp.ClientSession() as sess:
-            async with ss.post(self.discord_token_url, data=payload, headers=headers) as res:
-                json = await res.json()
-                return json | {"current_time": time.time()}
+        
+        return await _generic_at(
+            access_token.refresh_token, 
+            "refresh_token",
+            access_token.redirect_uri, 
+            access_token.scopes
+        )
