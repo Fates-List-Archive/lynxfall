@@ -1,11 +1,21 @@
 from typing import List, Optional
 from itsdangerous import URLSafeSerializer
 from aioredis import Connection
+from pydantic import BaseModel
+
+class OauthConfig:
+    pass
+
+class OauthURL(BaseModel):
+    identifier: str
+    url: str
+    state_id: str
+    redirect_uri: ste
 
 class BaseOauth():
     IDENTIFIER = "base"
-    AUTHORIZE_URL = "https://example.com/api/oauth2/authorize"
-    TOKEN_URL = "https://example.com/api/oauth2/token"
+    AUTH_ENDPOINT = "https://example.com/api/oauth2/authorize"
+    TOKEN_ENDPOINT = "https://example.com/api/oauth2/token"
     API_URL = "https://example.com/api"
     
     def __init__(self, auth_jwt_key: str, oc: OauthConfig, redis: Connection):
@@ -21,7 +31,7 @@ class BaseOauth():
     def create_state(self, id):
         return self.auth_s.dumps(str(id))
 
-    def get_oauth(self, scopes: List[str], state_data: dict, redirect_uri: Optional[str] = None):
+    def get_oauth(self, scopes: List[str], state_data: dict, redirect_uri: Optional[str] = None) -> OauthURL:
         """Creates a secure oauth. State data is any data you want to have about a user after auth like user settings/login stuff etc."""
         
         state_id = uuid.uuid4()
@@ -30,7 +40,33 @@ class BaseOauth():
         scopes = self.get_scopes(scopes)
         await self.redis.set(f"oauth.{self.IDENTIFIER}-{state_id}", orjson.dumps(state_data))
         
-        return {
-            "url": f"{self.login_url}?client_id={self.client_id}&redirect_uri={redirect_uri}&state={state}&response_type=code&scope={scopes}",
-            "state_id": state_id
+        return OauthURL(
+            identifier = self.IDENTIFIER,
+            url = f"{self.AUTH_ENDPOINT}?client_id={self.client_id}&redirect_uri={redirect_uri}&state={state}&response_type=code&scope={scopes}",
+            state_id = state_id,
+            redirect_uri = redirect_uri
+        )
+
+    async def get_access_token(self, code: str, scope: str, redirect_uri: Optional[str] = None) -> dict: 
+        
+        payload = {
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": redirect_uri,
+            "scope": scope
         }
+        
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+        
+        redirect_uri = self.redirect_uri if not redirect_uri else redirect_uri
+        
+        async with aiohttp.ClientSession() as sess:
+            async with sess.post(self.TOKEN_ENDPOINT, data=payload, headers=headers) as res:
+                if res.status != 200:
+                    return None
+                json = await res.json()
+                return json | {"current_time": time.time()}
