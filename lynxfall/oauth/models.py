@@ -25,5 +25,4 @@ class AccessToken(BaseModel):
     refresh_token: str
     expires_in: Union[int, float]
     scope: str
-    current_time: Union[int, float]    
-    
+    current_time: Union[int, float]        
