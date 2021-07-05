@@ -4,13 +4,12 @@ import time
 import uuid
 from lynxfall.oauth.base import BaseOauth
 from typing import List, Optional, Union
-from itsdangerous import URLSafeSerializer
 
 import aiohttp
 from pydantic import BaseModel
 
 class DiscordOauth(BaseOauth):
-    def __init__(self, oc: OauthConfig):
+    def __init__(self, auth_jwt_key: str, oc: OauthConfig):
         self.client_id = oc.client_id
         self.client_secret = oc.client_secret
         self.redirect_uri = oc.redirect_uri
