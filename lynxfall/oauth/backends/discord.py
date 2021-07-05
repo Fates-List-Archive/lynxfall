@@ -17,28 +17,6 @@ class DiscordOauth(BaseOauth):
     TOKEN_URL = "https://discord.com/api/oauth2/token"
     API_URL = "https://discord.com/api"
 
-    async def access_token_check(self, scope: str, access_token_dict: dict) -> str:
-        if float(access_token_dict["current_time"]) + float(access_token_dict["expires_in"]) > time.time():
-            logger.debug("Using old access token without making any changes")
-            return access_token_dict
-        # Refresh
-        payload = {
-            "client_id": self.client_id,
-            "client_secret": self.client_secret,
-            "grant_type": "refresh_token",
-            "refresh_token": access_token_dict["refresh_token"],
-            "redirect_uri": self.redirect_uri,
-            "scope": scope
-        }
-
-        headers = {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }
-        async with aiohttp.ClientSession() as sess:
-            async with ss.post(self.discord_token_url, data=payload, headers=headers) as res:
-                json = await res.json()
-                return json | {"current_time": time.time()}
-
     async def get_user_json(self, access_token):
         url = self.discord_api_url + "/users/@me"
 
