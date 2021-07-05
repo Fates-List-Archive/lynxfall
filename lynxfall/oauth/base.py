@@ -30,4 +30,7 @@ class BaseOauth():
         scopes = self.get_scopes(scopes)
         await self.redis.set(f"oauth.{self.IDENTIFIER}-{state_id}", orjson.dumps(state_data))
         
-        return f"{self.login_url}?client_id={self.client_id}&redirect_uri={redirect_uri}&state={state}&response_type=code&scope={scopes}"
+        return {
+            "url": f"{self.login_url}?client_id={self.client_id}&redirect_uri={redirect_uri}&state={state}&response_type=code&scope={scopes}",
+            "state_id": state_id
+        }
