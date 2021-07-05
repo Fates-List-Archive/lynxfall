@@ -4,6 +4,7 @@ import time
 import uuid
 from lynxfall.oauth.base import BaseOauth
 from typing import List, Optional, Union
+from itsdangerous import URLSafeSerializer
 
 import aiohttp
 from pydantic import BaseModel
