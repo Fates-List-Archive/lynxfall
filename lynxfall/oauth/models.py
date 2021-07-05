@@ -27,8 +27,8 @@ class AccessToken(ResponseModel):
     access_token: str
     refresh_token: str
     expires_in: Union[int, float]
-    scope: str
-    current_time: Union[int, float]        
+    scopes: str
+    current_time: Union[int, float]      
 
     def expired(self):
         """Returns whether a access token has expired or not"""
