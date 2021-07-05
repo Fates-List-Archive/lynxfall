@@ -1,7 +1,8 @@
 from typing import List, Optional
 from itsdangerous import URLSafeSerializer
 from aioredis import Connection
-from lynxfall.oauth.models import OauthConfig, OauthURL
+from loguru import logger
+from lynxfall.oauth.models import OauthConfig, OauthURL, AccessToken
 from lynxfall.oauth.exceptions import OauthRequestError
 import aiohttp
 
@@ -42,6 +43,7 @@ class BaseOauth():
 
     async def _request(self, url, data, headers):
         """Makes a API request using aiohttp"""
+        
         async with aiohttp.ClientSession() as sess:
             async with sess.post(url, data=data, headers=headers) as res:
                 if str(res.status) != "2":
@@ -50,6 +52,8 @@ class BaseOauth():
                 return json | {"current_time": time.time()}
     
     async def get_access_token(self, code: str, scope: str, redirect_uri: Optional[str] = None) -> AccessToken: 
+        
+        redirect_uri = self.redirect_uri if not redirect_uri else redirect_uri
         
         payload = {
             "client_id": self.client_id,
@@ -64,16 +68,22 @@ class BaseOauth():
             'Content-Type': 'application/x-www-form-urlencoded'
         }
         
-        redirect_uri = self.redirect_uri if not redirect_uri else redirect_uri
+        json = await self._request(self.TOKEN_URL, payload, headers)
+        return AccessToken(
+            identifier = self.IDENTIFIER,
+            redirect_uri = redirect_uri,
+            access_token = json["access_token"],
+            refresh_token = json["refresh_token"],
+            expires_in = json["expires_in"],
+            current_time = json["current_time"]
+        )
         
-        return await self._request(self.TOKEN_URL, payload, headers)
-
     
-    async def check_access_token(self, scope: str, access_token_dict: dict) -> str:
-        
-        if float(access_token_dict["current_time"]) + float(access_token_dict["expires_in"]) > time.time():
+    async def refresh_access_token(self, scope: str, access_token: AccessToken) -> str:
+        """Refreshes a access token if expired. If it is not expired, this return the same access token again"""
+        if not access_token.expired():
             logger.debug("Using old access token without making any changes")
-            return access_token_dict
+            return access_token
         # Refresh
         payload = {
             "client_id": self.client_id,
