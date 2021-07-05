@@ -17,55 +17,54 @@ class DiscordOauth(BaseOauth):
     API_URL = "https://discord.com/api"
 
     async def get_user_json(self, access_token: AccessToken):
-        url = self.API_URL + "/users/@me"
+        url = f"{self.API_URL}/users/@me"
 
         headers = {
             "Authorization": f"Bearer {access_token.access_token}"
         }
         
-        return await self._request(url, None, headers)
+        return await self._request(url, headers=headers)
 
-    async def get_guilds(self, access_token: str, permissions: Optional[hex] = None):
-        url = self.discord_api_url + "/users/@me/guilds"
+    async def get_guilds(self, access_token: AccessToken, permissions: Optional[hex] = None):
+        url = f"{self.API_URL}/users/@me/guilds"
+        
         headers = {
-            "Authorization": f"Bearer {access_token}"
+            "Authorization": f"Bearer {access_token.access_token}"
         }
-        async with aiohttp.ClientSession() as sess:
-            async with sess.get(url, headers = headers) as res:
-                if res.status != 200:
-                    return []
-                guild_json = await res.json()
+        
+        guild_json = await self._request(url, headers=headers)
+        
         try:
             guilds = []
             for guild in guild_json:
                 
                 if permissions is None:
                     guilds.append(str(guild["id"]))
+                    continue
                     
-                else:
-                    flag = False
+                flag = False
                     
-                    for perm in permissions:
-                        if flag:
-                            continue
-                        elif (guild["permissions"] & perm) == perm:
-                            flag = True
-                        
-                    if flag:
+                for perm in permissions:
+                    if (guild["permissions"] & perm) == perm:
                         guilds.append(str(guild["id"]))
+                        
         except:
             guilds = []
+            
         logger.debug(f"Got guilds {guilds}")
         return guilds
 
-    async def join_user(self, access_token, user_id):
-        url = self.discord_api_url+f"/guilds/{main_server}/members/{user_id}"
+    async def join_user(self, *, access_token: AccessToken, user_id: int, guild_id: int, bot_token: str):
+        url = f"{self.API_URL}/guilds/{guild_id}/members/{user_id}"
 
         headers = {
-            "Authorization": f"Bot {TOKEN_MAIN}"
+            "Authorization": f"Bot {bot_token}"
         }
+        
+        payload = {"access_token": access_token.access_token}
+        
         async with aiohttp.ClientSession() as sess:
-            async with sess.put(url, headers = headers, json = {"access_token": access_token}) as res:
+            async with sess.put(url, headers = headers, json = payload) as res:
                 if res.status not in (201, 204):
                     return False
                 return True
