@@ -8,8 +8,8 @@ import aiohttp
 
 class BaseOauth():
     IDENTIFIER = "base"
-    AUTH_ENDPOINT = "https://example.com/api/oauth2/authorize"
-    TOKEN_ENDPOINT = "https://example.com/api/oauth2/token"
+    AUTH_URL = "https://example.com/api/oauth2/authorize"
+    TOKEN_URL = "https://example.com/api/oauth2/token"
     API_URL = "https://example.com/api"
     
     def __init__(self, auth_jwt_key: str, oc: OauthConfig, redis: Connection):
@@ -40,7 +40,7 @@ class BaseOauth():
       
         return OauthURL(
             identifier = self.IDENTIFIER,
-            url = f"{self.AUTH_ENDPOINT}?client_id={self.client_id}&redirect_uri={redirect_uri}&state={state}&response_type=code&scope={scopes}",
+            url = f"{self.AUTH_URL}?client_id={self.client_id}&redirect_uri={redirect_uri}&state={state}&response_type=code&scope={scopes}",
             state_id = state_id,
             redirect_uri = redirect_uri
         )
