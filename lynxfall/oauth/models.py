@@ -23,13 +23,16 @@ class AccessToken(ResponseModel):
     Represents a access token
     
     token_type should always be Bearer and is hence not included
+    
+    state_id is None on a refresh request, but is present otherwise
     """
     
     access_token: str
     refresh_token: str
     expires_in: Union[int, float]
     scopes: str
-    current_time: Union[int, float]      
+    current_time: Union[int, float]
+    state_id: Optional[str] = None
 
     def expired(self):
         """Returns whether a access token has expired or not"""
