@@ -27,7 +27,7 @@ class BaseOauth():
         return self.auth_s.dumps(str(id))
 
     def get_state(self, state_jwt):
-        """Get the state given the state jwt"""
+        """Get the state given the state jwt. Returns None if jwt is invalid"""
         try:
             state_jwt_id = self.auth_s.loads(state_jwt)
             return state_jwt_id
