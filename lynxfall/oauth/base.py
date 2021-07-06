@@ -102,7 +102,7 @@ class BaseOauth():
         
         async with aiohttp.ClientSession() as sess:
             async with sess.post(url, **urlargs) as res:
-                if str(res.status) != "2":
+                if str(res.status)[0] != "2":
                     raise OauthRequestError("Could not make oauth request, recheck your client_secret")
                     
                 elif res.status == 401:
