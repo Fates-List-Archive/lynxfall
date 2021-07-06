@@ -25,7 +25,7 @@ class BaseOauth():
     def create_state(self, id):
         return self.auth_s.dumps(str(id))
 
-    def get_auth_link(self, scopes: List[str], state_data: dict, redirect_uri: Optional[str] = None) -> OauthURL:
+    async def get_auth_link(self, scopes: List[str], state_data: dict, redirect_uri: Optional[str] = None) -> OauthURL:
         """Creates a secure oauth. State data is any data you want to have about a user after auth like user settings/login stuff etc."""
         
         # Add in scopes to state data
@@ -44,7 +44,11 @@ class BaseOauth():
             state_id = state_id,
             redirect_uri = redirect_uri
         )
-
+    
+    async def verify_state(self, state_id, state_jwt):
+        """Verifies a state id based on state jwt"""
+        pass
+    
     async def _request(self, url, **urlargs):
         """Makes a API request using aiohttp"""
         
