@@ -36,4 +36,4 @@ class AccessToken(ResponseModel):
 
     def expired(self):
         """Returns whether a access token has expired or not"""
-        return float(self.current_time) + float(self.expires_in) > time.time()
+        return float(self.current_time) + float(self.expires_in) < time.time()
