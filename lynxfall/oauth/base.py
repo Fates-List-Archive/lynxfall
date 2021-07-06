@@ -98,11 +98,12 @@ class BaseOauth():
             redirect_uri = redirect_uri
         )
     
-    async def _request(self, url, **urlargs):
+    async def _request(self, method, url, **urlargs):
         """Makes a API request using aiohttp"""
         
         async with aiohttp.ClientSession() as sess:
-            async with sess.post(url, **urlargs) as res:
+            f = getattr(sess, method.lower())
+            async with f(url, **urlargs) as res:
                 if str(res.status)[0] != "2":
                     try:
                         json = await res.json()
@@ -139,7 +140,7 @@ class BaseOauth():
             'Content-Type': 'application/x-www-form-urlencoded'
         }
         
-        json = await self._request(self.TOKEN_URL, data=payload, headers=headers)
+        json = await self._request(self.TOKEN_URL, "POST", data=payload, headers=headers)
         
         return AccessToken(
             identifier = self.IDENTIFIER,
