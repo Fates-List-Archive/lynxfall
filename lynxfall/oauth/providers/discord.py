@@ -17,6 +17,7 @@ class DiscordOauth(BaseOauth):
     API_URL = "https://discord.com/api"
 
     async def get_user_json(self, access_token: AccessToken):
+        """Get the user json (https://discord.com/developers/docs/resources/user#user-object)"""
         url = f"{self.API_URL}/users/@me"
 
         headers = {
@@ -25,7 +26,7 @@ class DiscordOauth(BaseOauth):
         
         return await self._request(url, headers=headers)
 
-    async def get_guilds(self, access_token: AccessToken, permissions: Optional[hex] = None):
+    async def get_user_guilds(self, access_token: AccessToken, permissions: Optional[hex] = None):
         url = f"{self.API_URL}/users/@me/guilds"
         
         headers = {
@@ -54,7 +55,7 @@ class DiscordOauth(BaseOauth):
         logger.debug(f"Got guilds {guilds}")
         return guilds
 
-    async def join_user(self, *, access_token: AccessToken, user_id: int, guild_id: int, bot_token: str):
+    async def add_user_to_guild(self, *, access_token: AccessToken, user_id: int, guild_id: int, bot_token: str):
         url = f"{self.API_URL}/guilds/{guild_id}/members/{user_id}"
 
         headers = {
