@@ -22,7 +22,8 @@ setup(
         "lynxfall.rabbit.core",
         "lynxfall.rabbit.core.default_backends",
         "lynxfall.oauth",
-        "lynxfall.oauth.backends"
+        "lynxfall.oauth.providers",
+        "lynxfall.oauth.tempstor"
     ],
     zip_safe=False,
 )
