@@ -25,7 +25,7 @@ class DiscordOauth(BaseOauth):
             "Authorization": f"Bearer {access_token.access_token}"
         }
         
-        return await self._request(url, headers=headers)
+        return await self._request(url, "GET", headers=headers)
 
     async def get_user_guilds(
         self, 
@@ -42,7 +42,7 @@ class DiscordOauth(BaseOauth):
             "Authorization": f"Bearer {access_token.access_token}"
         }
         
-        guild_json = await self._request(url, headers=headers)
+        guild_json = await self._request(url, "GET", headers=headers)
         
         try:
             guilds = []
