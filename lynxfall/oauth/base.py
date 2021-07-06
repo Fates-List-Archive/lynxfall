@@ -7,6 +7,7 @@ from lynxfall.oauth.exceptions import OauthRequestError, OauthStateError
 from lynxfall.utils.string import secure_strcmp
 import aiohttp
 import uuid
+import orjson
 
 class BaseOauth():
     IDENTIFIER = "base"
