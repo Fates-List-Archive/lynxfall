@@ -82,9 +82,9 @@ class BaseOauth():
         """
         
         # Add in scopes to state data
+        state_data["scopes"] = scopes
         scopes = self.get_scopes(scopes)
         redirect_uri = self.redirect_uri if not redirect_uri else redirect_uri
-        state_data["scopes"] = scopes
         state_data["redirect_uri"] = redirect_uri
         state_id = str(uuid.uuid4())
         state = self.create_state(state_id)
