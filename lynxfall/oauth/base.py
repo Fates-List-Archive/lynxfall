@@ -47,14 +47,17 @@ class BaseOauth():
     async def clear_state(self, state_id):
         await self.redis.delete(f"oauth.{self.IDENTIFIER}-{state_id}")
         
-    async def get_auth_link(
+    async def get_auth_url(
         self, 
         scopes: List[str],
         state_data: dict, 
         redirect_uri: Optional[str] = None,
         state_expiry = 150
     ) -> OauthURL:
-        """Creates a secure oauth. State data is any data you want to have about a user after auth like user settings/login stuff etc."""
+        """
+        Gets a one time auth url for a user and saves state id to redis. 
+        State data is any data you want to have about a user after auth like user settings/login stuff etc.
+        """
         
         # Add in scopes to state data
         scopes = self.get_scopes(scopes)
