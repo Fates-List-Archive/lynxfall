@@ -17,7 +17,7 @@ class DiscordOauth(BaseOauth):
     TOKEN_URL = "https://discord.com/api/oauth2/token"
     API_URL = "https://discord.com/api"
 
-    async def get_user_json(self, access_token: AccessToken):
+    async def get_user_json(self, access_token: AccessToken) -> dict:
         """Get the user json (https://discord.com/developers/docs/resources/user#user-object)"""
         url = f"{self.API_URL}/users/@me"
 
