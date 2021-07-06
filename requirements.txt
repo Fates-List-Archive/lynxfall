@@ -7,3 +7,5 @@ orjson
 loguru
 nest_asyncio
 cython
+itsdangerous
+aiohttp
