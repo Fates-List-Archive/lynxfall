@@ -42,7 +42,14 @@ class BaseOauth():
             return None
     async def get_state(self, state_id):
         """Get a state from redis"""
-        return await self.redis.get(f"oauth.{self.IDENTIFIER}-{state_id}")
+        data = await self.redis.get(f"oauth.{self.IDENTIFIER}-{state_id}")
+        if not data:
+            return None
+        
+        try:
+            return orjson.loads(data)
+        except:
+            return None
         
     def verify_state(self, state_id, state_jwt):
         """Verifies a state id based on state jwt"""
@@ -162,8 +169,6 @@ class BaseOauth():
             raise OauthStateError(
                 f"Invalid state. There is no oauth data associated with this state. Please try logging in again using {login_retry_url}"
             )
-
-        oauth = orjson.loads(oauth)
         
         if clear_state:
             await self.clear_state(state_id)
