@@ -6,7 +6,7 @@ from loguru import logger
 from lynxfall.oauth.base import BaseOauth
 from lynxfall.oauth.models import AccessToken
 import aiohttp
-from typing import Optional, List
+from typing import Optional, List, Union
 from pydantic import BaseModel
 
 class DiscordOauth(BaseOauth):
@@ -27,7 +27,15 @@ class DiscordOauth(BaseOauth):
         
         return await self._request(url, headers=headers)
 
-    async def get_user_guilds(self, access_token: AccessToken, permissions: Optional[List[hex]] = None):
+    async def get_user_guilds(
+        self, 
+        access_token: AccessToken, 
+        permissions: Optional[List[hex]] = None
+    ) -> List[dict]:
+        """
+        Gets a list of guilds. 
+        If permissions is provided, only guilds in which user has said permission will be returned
+        """
         url = f"{self.API_URL}/users/@me/guilds"
         
         headers = {
@@ -41,12 +49,12 @@ class DiscordOauth(BaseOauth):
             for guild in guild_json:
                 
                 if permissions is None:
-                    guilds.append(str(guild["id"]))
+                    guilds.append(guild)
                     continue
                     
                 for perm in permissions:
                     if (guild["permissions"] & perm) == perm:
-                        guilds.append(str(guild["id"]))
+                        guilds.append(guild)
                         continue
                         
         except Exception:
@@ -54,7 +62,23 @@ class DiscordOauth(BaseOauth):
             
         return guilds
 
-    async def add_user_to_guild(self, *, access_token: AccessToken, user_id: int, guild_id: int, bot_token: str):
+    async def add_user_to_guild(
+        self,
+        *, 
+        access_token: AccessToken,
+        user_id: Union[int, str],
+        guild_id: int, 
+        bot_token: str
+    ) -> bool:
+        """
+        Adds/joins a user to a discord server/guild
+        
+        This needs a bot and a bot token to be provided
+        
+        Get the user_id from the get_user_json method. Should be integer, but string is also supported
+        
+        Returns a boolean on whether the user has been added to the guild or not.
+        """
         url = f"{self.API_URL}/guilds/{guild_id}/members/{user_id}"
 
         headers = {
