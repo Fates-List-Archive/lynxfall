@@ -2,7 +2,7 @@ import secrets
 import string
 import time
 import uuid
-from loguru import Logger
+from loguru import logger
 from lynxfall.oauth.base import BaseOauth
 from lynxfall.oauth.models import AccessToken
 import aiohttp
@@ -52,7 +52,6 @@ class DiscordOauth(BaseOauth):
         except Exception:
             guilds = []
             
-        logger.debug(f"Got guilds {guilds}")
         return guilds
 
     async def add_user_to_guild(self, *, access_token: AccessToken, user_id: int, guild_id: int, bot_token: str):
