@@ -6,6 +6,7 @@ from loguru import Logger
 from lynxfall.oauth.base import BaseOauth
 from lynxfall.oauth.models import AccessToken
 import aiohttp
+from typing import Optional, List
 from pydantic import BaseModel
 
 class DiscordOauth(BaseOauth):
@@ -26,7 +27,7 @@ class DiscordOauth(BaseOauth):
         
         return await self._request(url, headers=headers)
 
-    async def get_user_guilds(self, access_token: AccessToken, permissions: Optional[hex] = None):
+    async def get_user_guilds(self, access_token: AccessToken, permissions: Optional[List[hex]] = None):
         url = f"{self.API_URL}/users/@me/guilds"
         
         headers = {
@@ -43,13 +44,12 @@ class DiscordOauth(BaseOauth):
                     guilds.append(str(guild["id"]))
                     continue
                     
-                flag = False
-                    
                 for perm in permissions:
                     if (guild["permissions"] & perm) == perm:
                         guilds.append(str(guild["id"]))
+                        continue
                         
-        except:
+        except Exception:
             guilds = []
             
         logger.debug(f"Got guilds {guilds}")
