@@ -151,7 +151,7 @@ class BaseOauth():
         For security, use clear_state as True unless you have a reason not to like Fates List does. 
         If you do need clear_state as False, be sure to call clear_state(state_id) to clear the state from the DB.
         """
-        state_id = self.get_state(state_jwt)
+        state_id = self.get_state_id(state_jwt)
         if not state_id:
             raise OauthStateError(
                 f"Invalid state provided. Please try logging in again using {login_retry_url}"
