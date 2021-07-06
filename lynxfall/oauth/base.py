@@ -112,11 +112,14 @@ class BaseOauth():
         code: str, 
         state_jwt: str, 
         login_retry_url: str,
-        clear_state: bool = False
+        clear_state: bool = True
     ) -> AccessToken: 
         """
         Creates a access token from the state (as JWT) that was created using get_auth_link. 
         Login retry URL is where users can go to login again if login fails.
+        
+        For security, use clear_state as True unless you have a reason not to like Fates List does. 
+        If you do need clear_state as False, be sure to call clear_state(state_id) to clear the state from the DB.
         """
         
         try:
