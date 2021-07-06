@@ -40,6 +40,7 @@ class BaseOauth():
             return state_jwt_id
         except Exception:
             return None
+        
     async def get_state(self, state_id):
         """Get a state from redis"""
         data = await self.redis.get(f"oauth.{self.IDENTIFIER}-{state_id}")
