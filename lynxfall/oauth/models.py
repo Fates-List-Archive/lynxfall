@@ -12,6 +12,7 @@ class OauthConfig(BaseModel):
     client_id: str
     client_secret: str
     redirect_uri: str
+    lynxfall_jwt_key: str
 
 class OauthURL(ResponseModel):
     url: str
