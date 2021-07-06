@@ -104,7 +104,11 @@ class BaseOauth():
         async with aiohttp.ClientSession() as sess:
             async with sess.post(url, **urlargs) as res:
                 if str(res.status)[0] != "2":
-                    raise OauthRequestError(f"Could not make oauth request, recheck your client_secret. Got status code {res.status}")
+                    try:
+                        json = await res.json()
+                    except Exception:
+                        json = {}
+                    raise OauthRequestError(f"Could not make oauth request, recheck your client_secret. Got status code {res.status} and json of {json}")
                     
                 elif res.status == 401:
                     return OauthRequestError("Oauth endpoint returned 401")
@@ -179,7 +183,7 @@ class BaseOauth():
             
         scopes = self.get_scopes(oauth["scopes"])
         
-        raise Exception(f"{code}, {self.get_scopes(oauth['scopes'])}")
+        logger.debug(f"{code}, {self.get_scopes(oauth['scopes'])}")
         return await self._generic_at(
             code, 
             "authorization_code",
