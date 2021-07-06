@@ -98,7 +98,7 @@ class BaseOauth():
             redirect_uri = redirect_uri
         )
     
-    async def _request(self, method, url, **urlargs):
+    async def _request(self, url, method, **urlargs):
         """Makes a API request using aiohttp"""
         
         async with aiohttp.ClientSession() as sess:
