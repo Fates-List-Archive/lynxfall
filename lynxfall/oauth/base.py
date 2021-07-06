@@ -21,9 +21,16 @@ class BaseOauth():
         self.redis = redis
         
     def get_scopes(self, scopes_lst: List[str]) -> str:
+        """Helper function to turn a list of scopes into a space seperated string"""
         return "%20".join(scopes_lst)
 
     def create_state(self, id):
+        """
+        Creates a state as JWT from a state id
+        
+        Lynxfall internally uses UUID for state ID which
+        is subject to change and should not be relied on.
+        """
         return self.auth_s.dumps(str(id))
 
     def get_state(self, state_jwt):
@@ -45,6 +52,7 @@ class BaseOauth():
         return False
     
     async def clear_state(self, state_id):
+        """Clears a state ID from redis"""
         await self.redis.delete(f"oauth.{self.IDENTIFIER}-{state_id}")
         
     async def get_auth_url(
@@ -55,7 +63,7 @@ class BaseOauth():
         state_expiry = 150
     ) -> OauthURL:
         """
-        Gets a one time auth url for a user and saves state id to redis. 
+        Gets a one time auth url for a user and saves state ID to redis. 
         State data is any data you want to have about a user after auth like user settings/login stuff etc.
         """
         
@@ -168,9 +176,14 @@ class BaseOauth():
         )
            
     async def refresh_access_token(self, access_token: AccessToken) -> str:
-        """Refreshes a access token if expired. If it is not expired, this returns the same access token again"""
+        """
+        Refreshes a access token if expired. 
+        
+        If it is not expired, this returns the 
+        same access token passed to the function
+        """
         if not access_token.expired():
-            logger.debug("Using old access token without making any changes")
+            logger.warning("Using old access token previously passed to the function")
             return access_token
         
         return await self._generic_at(
