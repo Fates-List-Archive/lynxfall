@@ -64,7 +64,6 @@ class DiscordOauth(BaseOauth):
 
     async def add_user_to_guild(
         self,
-        *, 
         access_token: AccessToken,
         user_id: Union[int, str],
         guild_id: int, 
