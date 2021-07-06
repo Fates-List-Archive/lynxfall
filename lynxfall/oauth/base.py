@@ -36,8 +36,17 @@ class BaseOauth():
         
         except Exception:
             return False
-    
-    async def get_auth_link(self, scopes: List[str], state_data: dict, redirect_uri: Optional[str] = None) -> OauthURL:
+        
+    async def clear_state(self, state_id):
+        await self.redis.delete(f"oauth.{self.IDENTIFIER}-{state_id}")
+        
+    async def get_auth_link(
+        self, 
+        scopes: List[str],
+        state_data: dict, 
+        redirect_uri: Optional[str] = None,
+        state_expiry = 150
+    ) -> OauthURL:
         """Creates a secure oauth. State data is any data you want to have about a user after auth like user settings/login stuff etc."""
         
         # Add in scopes to state data
@@ -48,7 +57,7 @@ class BaseOauth():
         state_id = uuid.uuid4()
         state = self.create_state(state_id)
         
-        await self.redis.set(f"oauth.{self.IDENTIFIER}-{state_id}", orjson.dumps(state_data))
+        await self.redis.set(f"oauth.{self.IDENTIFIER}-{state_id}", orjson.dumps(state_data), ex = state_expiry)
       
         return OauthURL(
             identifier = self.IDENTIFIER,
@@ -102,11 +111,12 @@ class BaseOauth():
         self, 
         code: str, 
         state_jwt: str, 
-        login_retry_url: str
+        login_retry_url: str,
+        clear_state: bool = False
     ) -> AccessToken: 
         """
         Creates a access token from the state (as JWT) that was created using get_auth_link. 
-        Login retry URL is where users can go to login again if login fails   
+        Login retry URL is where users can go to login again if login fails.
         """
         
         try:
@@ -117,7 +127,7 @@ class BaseOauth():
                 f"Invalid state provided. Please try logging in again using {login_retry_url}"
             )
         
-        oauth = await self.redis.get(f"oauth-{state_id}")
+        oauth = await self.redis.get(f"oauth.{self.IDENTIFIER}-{state_id}")
         if not oauth:
             raise OauthStateError(
                 f"Invalid state. There is no oauth data associated with this state. Please try logging in again using {login_retry_url}"
@@ -125,6 +135,9 @@ class BaseOauth():
 
         oauth = orjson.loads(oauth)
         
+        if clear_state:
+            await self.clear_state(state_id)
+            
         scopes = self.get_scopes(oauth["scopes"])
 
         return await self._generic_at(
