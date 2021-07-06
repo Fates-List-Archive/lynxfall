@@ -1,6 +1,9 @@
 from setuptools import setup
 from Cython.Build import cythonize
+import os
 
+os.system("pip install -r requirements.txt") # Hacky solution to get it working
+          
 setup(
     name='lynxfall',
     version = "1.0",
