@@ -12,7 +12,7 @@ class DiscordOauth(BaseOauth):
     """Discord oauth implementation, more in future for guilded etc."""
     
     IDENTIFIER = "discord"
-    AUTHORIZE_URL = "https://discord.com/api/oauth2/authorize"
+    AUTH_URL = "https://discord.com/api/oauth2/authorize"
     TOKEN_URL = "https://discord.com/api/oauth2/token"
     API_URL = "https://discord.com/api"
 
