@@ -80,7 +80,15 @@ class BaseOauth():
                 json = await res.json()
                 return json | {"current_time": time.time()}
             
-    async def _generic_at(self, code: str, grant_type: str, redirect_uri: str, scopes: str) -> AccessToken:
+    async def _generic_at(
+        self, 
+        code: str, 
+        grant_type: str, 
+        redirect_uri: str, 
+        scopes: str,
+        *, 
+        state_id: Optional[str] = None
+    ) -> AccessToken:
         """Generic access token handling"""
         payload = {
             "client_id": self.client_id,
@@ -104,7 +112,8 @@ class BaseOauth():
             refresh_token = json["refresh_token"],
             expires_in = json["expires_in"],
             current_time = json["current_time"],
-            scopes = scopes
+            scopes = scopes,
+            state_id = state_id
         )
     
     async def get_access_token(
@@ -147,7 +156,8 @@ class BaseOauth():
             code, 
             "authorization_code",
             oauth["redirect_uri"], 
-            self.get_scopes(oauth["scopes"])
+            self.get_scopes(oauth["scopes"]),
+            state_id = state_id
         )
            
     async def refresh_access_token(self, access_token: AccessToken) -> str:
