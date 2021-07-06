@@ -14,7 +14,7 @@ class BaseOauth():
     API_URL = "https://example.com/api"
     
     def __init__(self, oc: OauthConfig, redis: Connection):
-        self.auth_s = URLSafeSerializer(oc.lynxfall_jwt_key, "auth")
+        self.auth_s = URLSafeSerializer(oc.lynxfall_key, "auth")
         self.client_id = oc.client_id
         self.client_secret = oc.client_secret
         self.redirect_uri = oc.redirect_uri
@@ -71,7 +71,7 @@ class BaseOauth():
       
         return OauthURL(
             identifier = self.IDENTIFIER,
-            url = f"{self.AUTH_URL}?client_id={self.client_id}&redirect_uri={redirect_uri}&state={state}&response_type=code&scope={scopes}",
+            url = f"{self.AUTH_URL}?client_id={self.client_id}&redirect_uri={redirect_uri}&state={state}&response_type=code&scope={scopes}",  # noqa
             state_id = state_id,
             redirect_uri = redirect_uri
         )
