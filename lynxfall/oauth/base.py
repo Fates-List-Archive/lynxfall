@@ -85,7 +85,7 @@ class BaseOauth():
         redirect_uri = self.redirect_uri if not redirect_uri else redirect_uri
         state_data["scopes"] = scopes
         state_data["redirect_uri"] = redirect_uri
-        state_id = uuid.uuid4()
+        state_id = str(uuid.uuid4())
         state = self.create_state(state_id)
         
         await self.redis.set(f"oauth.{self.IDENTIFIER}-{state_id}", orjson.dumps(state_data), ex = state_expiry)
