@@ -4,6 +4,7 @@ from aioredis import Connection
 from loguru import logger
 from lynxfall.oauth.models import OauthConfig, OauthURL, AccessToken
 from lynxfall.oauth.exceptions import OauthRequestError, OauthStateError
+from lynxfall.utils.string import secure_strcmp
 import aiohttp
 
 class BaseOauth():
@@ -25,18 +26,24 @@ class BaseOauth():
     def create_state(self, id):
         return self.auth_s.dumps(str(id))
 
-    async def verify_state(self, state_id, state_jwt):
-        """Verifies a state id based on state jwt"""
+    def get_state(self, state_jwt):
+        """Get the state given the state jwt"""
         try:
             state_jwt_id = self.auth_s.loads(state_jwt)
-            
-            if state_id != state_jwt_id:
-                return False
-            return True
-        
+            return state_jwt_id
         except Exception:
+            return None
+    
+    def verify_state(self, state_id, state_jwt):
+        """Verifies a state id based on state jwt"""
+        state_jwt_id = self.get_state(state_jwt)
+        if not state_jwt_id:
             return False
         
+        if secure_strcmp(state_id, state_jwt_id):
+            return True
+        return False
+    
     async def clear_state(self, state_id):
         await self.redis.delete(f"oauth.{self.IDENTIFIER}-{state_id}")
         
