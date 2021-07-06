@@ -9,6 +9,15 @@ class ResponseModel(BaseModel):
 
 # Core models
 class OauthConfig(BaseModel):
+    """
+    Get these from your oauth system/provider
+    
+    client_id - Client ID
+    client_secret - Client Secret
+    redirect_uri - A allowed redirect uri (some, like discord, need this to be added to your oauth application)
+    
+    lynxfall_key - A randomly generated key for lynxfall to use for state verification etc.
+    """
     client_id: str
     client_secret: str
     redirect_uri: str
