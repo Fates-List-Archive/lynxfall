@@ -94,7 +94,7 @@ def include_routers(
                 if not f.startswith(ignore_starts):
                     
                     try:
-                        end = f[-4:]
+                        end = f[-3:]
                     except IndexError:
                         continue
                     
