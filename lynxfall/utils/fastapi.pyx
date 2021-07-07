@@ -9,6 +9,7 @@ from starlette.status import HTTP_302_FOUND, HTTP_303_SEE_OTHER
 from pydantic import BaseModel
 import importlib
 import os
+from loguru import logger
 
 
 # Some basic utility functions for Fates List (and other fastapi users as well)
