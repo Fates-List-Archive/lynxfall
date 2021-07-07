@@ -80,8 +80,7 @@ def include_routers(
     app, 
     service_name, 
     service_dir, 
-    ignore_starts: tuple = ("_", ".", "models", "base"),
-    ignore_ends: tuple = ("pyc", "pyd")
+    ignore_starts: tuple = ("_", ".", "models", "base")
 ):
     logger.info(f"Loading routes for service {service_name}")
     
@@ -89,7 +88,7 @@ def include_routers(
         if not root.startswith(ignore_starts):
             rrep = root.replace("/", ".")
             for f in files:
-                if not f.startswith(ignore_starts) and not f.endswith(ignore_ends):
+                if not f.startswith(ignore_starts):
                     
                     try:
                         end = f[-4:]
