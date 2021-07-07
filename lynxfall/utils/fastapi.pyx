@@ -8,7 +8,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.status import HTTP_302_FOUND, HTTP_303_SEE_OTHER
 from pydantic import BaseModel
 import importlib
-impot os
+import os
 
 
 # Some basic utility functions for Fates List (and other fastapi users as well)
