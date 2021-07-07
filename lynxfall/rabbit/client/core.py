@@ -16,7 +16,7 @@ RMQ_META = {
     "ret": None # The UUID to save returned values to on Redis if wanted
 }
 
-async def add_rmq_task(queue_name: str, data: dict, **meta):
+async def add_rmq_task(queue_name: str, data: dict, *, headers: dict = None, **meta):
     """Adds a RabbitMQ Task using the Fates List Worker Protocol"""
     if not RabbitClient.worker_key or not RabbitClient.redis or not RabbitClient.rabbit:
         raise Exception("You must set worker key, redis and redis using set before using this!")
@@ -26,21 +26,26 @@ async def add_rmq_task(queue_name: str, data: dict, **meta):
         meta = _meta
     else:
         meta = RMQ_META
+    base_headers = {"auth": RabbitClient.worker_key}
+    if headers:
+        headers = base_headers.update(headers)
+    else:
+        headers = base_headers
     channel = await RabbitClient.rabbit.channel()
     await channel.set_qos(prefetch_count=1)
     await channel.default_exchange.publish(
-        aio_pika.Message(orjson.dumps({"ctx": data, "meta": meta}), delivery_mode=aio_pika.DeliveryMode.PERSISTENT, headers = {"auth": RabbitClient.worker_key}),
+        aio_pika.Message(orjson.dumps({"ctx": data, "meta": meta}), delivery_mode=aio_pika.DeliveryMode.PERSISTENT, headers = headers),
         routing_key=queue_name
     )
 
-async def add_rmq_task_with_ret(queue_name, data: dict, **meta):
+async def add_rmq_task_with_ret(queue_name, data: dict, headers: dict = None, **meta):
     """Add RabbitMQ Task, wait for it to complete, then get return code from Redis and return it"""
     if "ret" in meta.keys():
         _ret = meta["ret"]
     else:
         _ret = str(uuid.uuid4())
         meta["ret"] = _ret
-    await add_rmq_task(queue_name, data, **meta)
+    await add_rmq_task(queue_name, data, headers = headers, **meta)
     return await rmq_get_ret(_ret)
 
 async def rmq_get_ret(id):
