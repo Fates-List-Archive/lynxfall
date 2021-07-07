@@ -75,28 +75,33 @@ def api_versioner(request, def_version):
     return new_scope, api_ver
 
 
-# A simple routing system for those who don't want to worry about the nuances of routing
-def include_routers(app, service_name, service_dir, ignore_starts = ["_", ".", "models", "base"], ignore_ends = ["pyc"]):
+# A simple routing system for those who don't want to worry about the nuances of imcluding routers
+def include_routers(
+    app, 
+    service_name, 
+    service_dir, 
+    ignore_starts: tuple = ("_", ".", "models", "base"),
+    ignore_ends: tuple = ("pyc", "pyd")
+):
     logger.info(f"Loading routes for service {service_name}")
     
     for root, dirs, files in os.walk(service_dir):
-        if (not root.startswith("_") 
-            and not root.startswith(".") 
-            and not root.startswith("debug")
-        ):
+        if not root.startswith(ignore_starts):
             rrep = root.replace("/", ".")
             for f in files:
-                if (not f.startswith("_") 
-                    and not f.startswith(".") 
-                    and not f.endswith("pyc") 
-                    and not f.startswith("models") 
-                    and not f.startswith("base")
-                ):
-                    path = f"{rrep}.{f.replace('.py', '')}"
-                    logger.info(
-                        f"Loading route {f} with path {path} and root dir {root}"
-                    )
-                    route = importlib.import_module(path)
-                    app.include_router(route.router)
+                if not f.startswith(ignore_starts) and not f.endswith(ignore_ends):
+                    
+                    try:
+                        end = f[-4:]
+                    except IndexError:
+                        continue
+                    
+                    if end == ".py":
+                        path = f"{rrep}.{f.replace('.py', '')}"
+                        logger.info(
+                            f"Loading route {f} with path {path} and root dir {root}"
+                        )
+                        route = importlib.import_module(path)
+                        app.include_router(route.router)
 
     logger.info(f"Done init of {service_name}")
