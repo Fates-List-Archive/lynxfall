@@ -155,7 +155,7 @@ class TaskHandler():
         except Exception as exc:
             await state.on_error(state, logger, None, exc, "task_error", "failed_with_exc")
             await state.redis.incr("rmq_error_count")
-            state.stats[self.dict["task_id"]] = exc
+            state.stats.exc_tasks[self.dict["task_id"]] = exc
             
             raise exc
 
@@ -168,6 +168,7 @@ class Stats():
         self.handled = 0 # Handled messages count
         self.load_time = None # Amount of time taken to load site
         self.total_msgs = 0 # Total messages
+        self.exc_tasks = {}
 
     async def cure(self, index):
         """'Cures a error that has been handled"""
