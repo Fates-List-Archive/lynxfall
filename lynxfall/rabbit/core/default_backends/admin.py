@@ -1,6 +1,7 @@
 """Default backend for admin tasks. Required for monitoring lynx"""
 
 from lynxfall.rabbit.core import *
+import asyncio
 
 # Some functions
 
