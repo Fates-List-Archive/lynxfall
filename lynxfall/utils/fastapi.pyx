@@ -58,7 +58,7 @@ def api_versioner(request, def_version):
     new_scope = request.scope
     if path.startswith("/api/") and not path.startswith(("/api/v", "/api/ws")):
         if request.headers.get("API-Version"):
-            api_ver = request.headers.get("API-Version")
+            api_ver = str(request.headers.get("API-Version"))
         else:
             api_ver = str(def_version)
         new_scope["path"] = path.replace("/api", f"/api/v{api_ver}")
@@ -67,7 +67,7 @@ def api_versioner(request, def_version):
             api_ver = path.split("/")[2][1:] # Split by / and get 2nd (vX part and then get just X)
         else:
             api_ver = str(def_version)
-    api_ver = "0" if not api_ver
+    api_ver = "0" if not api_ver else "2"
     if request.headers.get("Method") and str(request.headers.get("Method")).upper() in ("GET", "POST", "PUT", "PATCH", "DELETE"):
         new_scope["method"] = str(request.headers.get("Method")).upper()
     return new_scope, api_ver
