@@ -54,25 +54,20 @@ def api_success(reason: str = None, status_code: int = 200, **kwargs):
 
 # Simple API versioning for APIs
 def api_versioner(request, def_version):
-    if (str(request.url.path).startswith("/api/") 
-        and not str(request.url.path).startswith("/api/docs") 
-        and not str(request.url.path).startswith("/api/v") 
-        and not str(request.url.path).startswith("/api/ws")
-    ):
+    path = str(request.url.path)
+    new_scope = request.scope
+    if path.startswith("/api/") and not path.startswith(("/api/v", "/api/ws")):
         if request.headers.get("API-Version"):
             api_ver = request.headers.get("API-Version")
         else:
             api_ver = str(def_version)
-        new_scope = request.scope
-        new_scope["path"] = new_scope["path"].replace("/api", f"/api/v{api_ver}")
+        new_scope["path"] = path.replace("/api", f"/api/v{api_ver}")
     else:
-        new_scope = request.scope
-        if str(request.url.path).startswith("/api/v"):
-            api_ver = str(request.url.path).split("/")[2][1:] # Split by / and get 2nd (vX part and then get just X)
-            if api_ver == "":
-                api_ver = str(def_version)
+        if path.startswith("/api/v"):
+            api_ver = path.split("/")[2][1:] # Split by / and get 2nd (vX part and then get just X)
         else:
             api_ver = str(def_version)
+    api_ver = "0" if not api_ver
     if request.headers.get("Method") and str(request.headers.get("Method")).upper() in ("GET", "POST", "PUT", "PATCH", "DELETE"):
         new_scope["method"] = str(request.headers.get("Method")).upper()
     return new_scope, api_ver
