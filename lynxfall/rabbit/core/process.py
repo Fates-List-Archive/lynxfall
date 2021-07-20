@@ -49,16 +49,14 @@ async def _new_task(queue, state):
                 message.ack()
                 return # No valid auth sent
             
-            if not _json.get("id"):
+            if not _json["meta"].get("id"):
                 return # No unique id sent
             
-            id = _json["id"]
+            id = _json["meta"]["id"]
             check = await state.redis.hexists(f"lynxfall-tasks", id)
             
             if check:
                 return # ID is a repeat                                     
-           
-            await state.redis.hset(f"lynxfall-tasks", key=id, value=0)
             
             _task_handler = TaskHandler(_json, queue)
             rc = await _task_handler.handle(state)
@@ -85,7 +83,9 @@ async def _new_task(queue, state):
             ran = False
             
         if ran: # If no errors recorded
+            await state.redis.hset(f"lynxfall-tasks", key=id, value=0)
             message.ack()
+
                 
         logger.opt(ansi = True).info(f"<m>Message {curr} Handled</m>")
         logger.debug(f"Message JSON of {_json}")
