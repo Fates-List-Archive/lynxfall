@@ -28,7 +28,6 @@ async def _new_task(queue, state):
     friendly_name = state.backends.getname(queue)
     _channel = await state.rabbit.channel()
     _queue = await _channel.declare_queue(queue, durable = True) # Function to handle our queue
-    ackall = state.backends.ackall(queue)
     async def _task(message: aio_pika.IncomingMessage):
         """RabbitMQ Queue Function"""
         ran = True
@@ -45,16 +44,17 @@ async def _new_task(queue, state):
                 message.ack()
                 return # No valid auth sent
             
-            if not _json.get("id"):
-                return # No unique id sent
-            
             if not secure_strcmp(_headers.get("auth"), state.worker_key):
                 logger.error(f"Invalid auth for {friendly_name} and JSON of {_json}")
                 message.ack()
                 return # No valid auth sent
             
+            if not _json.get("id"):
+                return # No unique id sent
+            
             id = _json["id"]
             check = await state.redis.hexists(f"lynxfall-tasks", id)
+            
             if check:
                 return # ID is a repeat                                     
            
@@ -65,11 +65,8 @@ async def _new_task(queue, state):
         
             if isinstance(rc, Exception):
                 await state.on_error(state, logger, message, rc, "task_error", "th_rc_exc")
-                
-                if not ackall: # If not a ackall task, then we raise the exception
-                    raise rc
-                else:
-                    rc = f"{type(rc).__name__}: {rc}"
+                ran = False
+                raise rc
 
             if _json["meta"].get("ret"):
                 key = f"lynxrabbit:{_json['meta'].get('ret')}"
