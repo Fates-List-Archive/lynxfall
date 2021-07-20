@@ -13,7 +13,7 @@ RMQ_META = {
     "dbg": True, # Debug Mode
     "worker": None, # For when we do multi server rabbit
     "op": None, # Any operations that we should run as a string
-    "ret": None # The UUID to save returned values to on Redis if wanted
+    "ret": None, # The UUID to save returned values to on Redis if wanted
 }
 
 async def add_rmq_task(queue_name: str, data: dict, *, headers: dict = None, **meta):
@@ -26,6 +26,7 @@ async def add_rmq_task(queue_name: str, data: dict, *, headers: dict = None, **m
         meta = _meta
     else:
         meta = RMQ_META
+    meta["id"] = str(uuid.uuid4())
     base_headers = {"auth": RabbitClient.worker_key}
     if headers:
         headers = base_headers.update(headers)
