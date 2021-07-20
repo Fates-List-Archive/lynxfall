@@ -22,12 +22,6 @@ class Backends(Singleton):
         else:
             self.rmq_backends[config.queue]["pre_ret"] = None
 
-    def ackall(self, queue):
-        try:
-            return self.rmq_backends[queue]["config"].ackall
-        except:
-            return False
-
     def getpre(self, queue):
         try:
             return self.rmq_backends[queue]["config"].pre
