@@ -50,6 +50,7 @@ async def _new_task(queue, state):
                 return # No valid auth sent
             
             if not _json["meta"].get("id"):
+                message.ack()
                 return # No unique id sent
             
             id = _json["meta"]["id"]
