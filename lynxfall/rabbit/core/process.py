@@ -24,16 +24,6 @@ class WorkerState(Singleton):
 
 state = WorkerState()
 
-def serialize(obj):
-    try:
-        orjson.dumps({"rc": obj})
-        return obj
-    except:
-        try:
-            return dict(obj)
-        except:
-            return str(obj)
-
 async def _new_task(queue, state):
     friendly_name = state.backends.getname(queue)
     _channel = await state.rabbit.channel()
@@ -54,68 +44,40 @@ async def _new_task(queue, state):
                 logger.error(f"Invalid auth for {friendly_name}")
                 message.ack()
                 return # No valid auth sent
-        
+            
+            if not _json.get("id"):
+                return # No unique id sent
+            
             if not secure_strcmp(_headers.get("auth"), state.worker_key):
                 logger.error(f"Invalid auth for {friendly_name} and JSON of {_json}")
                 message.ack()
                 return # No valid auth sent
-
-            # Normally handle rabbitmq task
-            id = uuid.uuid4()
-            _json["task_id"] = id
-            state.tasks_running[id] = (_json, _headers, queue)
+            
+            id = _json["id"]
+            check = await state.redis.exists(f"lynxfall-task-{id}")
+            if not check:
+                return # ID is a repeat                                     
+            
             _task_handler = TaskHandler(_json, queue)
             rc = await _task_handler.handle(state)
-            err = rc.get("err") if isinstance(rc, dict) else False
-            ret = rc.get("ret", rc) if isinstance(rc, dict) else rc
-            del state.tasks_running[id]
         
-            if isinstance(rc, Exception) or isinstance(ret, Exception):
-                await state.on_error(state, logger, message, rc, "task_error", "th_ret_exc")
+            if isinstance(rc, Exception):
+                await state.on_error(state, logger, message, rc, "task_error", "th_rc_exc")
                 
                 if not ackall: # If not a ackall task, then we raise the exception
-                    if isinstance(rc, Exception):
-                        raise rc
-                    else:
-                        raise ret
-                    
+                    raise rc
                 else:
-                    if isinstance(ret, Exception):
-                        ret = f"{type(ret).__name__}: {ret}"
-                    else:
-                        rc = f"{type(rc).__name__}: {rc}"
-            
-            _ret = {"ret": serialize(ret), "err": err}
+                    rc = f"{type(rc).__name__}: {rc}"
 
             if _json["meta"].get("ret"):
                 key = f"lynxrabbit:{_json['meta'].get('ret')}"
                 logger.debug(f"Saving return to {key}")
                 
                 try:
-                    await state.redis.set(key, orjson.dumps(_ret), ex = 60*2) # Save return code in redis
+                    await state.redis.set(key, rc, ex = 60*2) # Save return code in redis
                     
-                except Exception as exc:
-                    await state.on_error(state, logger, message, exc, "serialize_error", "json_error")
-                    
-                    try:
-                        extra = str(_ret["ret"])
-                    
-                    except Exception:
-                        extra = "No extra info available"
-                    
-                    _ret["ret"] = f"Could not save return in json: {extra}"
-                    _ret["err"] = True
-                    
-                    try:
-                        await state.redis.set(key, orjson.dumps(_ret), ex = 60*2) # Save error code in redis
-                    
-                    except Exception:
-                        extra = "No extra info available"
-                        
-                        _ret["ret"] = f"Could not save return in json: {extra}"
-                        _ret["err"] = True
-                        
-                        await state.redis.set(key, orjson.dumps(_ret), ex = 60*2) # Save error code in redis
+                except Exception as exc:                          
+                    await state.redis.set(key, str(exc), ex = 60*2) # Save error code in redis
                
         except Exception as exc:
             logger.exception("Worker error!")
