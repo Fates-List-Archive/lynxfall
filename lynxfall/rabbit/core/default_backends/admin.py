@@ -41,7 +41,6 @@ class Config:
     queue = "_admin"
     name = "Admin/Monitoring Backend"
     description = "Perform/Evaluate commands in Lynxfall worker for debugging."
-    ackall = True
     
 async def backend(state, json, **kwargs):
     if json["meta"].get("op"):
