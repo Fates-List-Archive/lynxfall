@@ -84,7 +84,6 @@ async def _new_task(queue, state):
             ran = False
             
         if ran: # If no errors recorded
-            logger.debug("Error")
             await state.redis.hset(f"lynxfall-tasks", key=id, value=0)
             message.ack()
 
