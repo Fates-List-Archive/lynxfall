@@ -2,6 +2,7 @@
 
 from lynxfall.rabbit.core import *
 import asyncio
+import orjson
 
 # Some functions
 
@@ -15,6 +16,12 @@ async def task_runner():
 ret = asyncio.run(task_runner())
 """
 
+def serialize(data):
+    try:
+        return orjson.dumps(data)
+    except Exception:
+        return str(data)
+    
 def _exec_op(op):
     try:
         op = _handle_await(op)
@@ -42,4 +49,4 @@ async def backend(state, json, **kwargs):
         op = json["meta"]["op"]
         _ret, _err = _exec_op(op)
         return {"ret": _ret, "err": _err}
-    return None
+    return {"ret": None, "err": False}
