@@ -54,9 +54,11 @@ async def _new_task(queue, state):
                 return # No valid auth sent
             
             id = _json["id"]
-            check = await state.redis.exists(f"lynxfall-task-{id}")
-            if not check:
+            check = await state.redis.hexists(f"lynxfall-tasks", id)
+            if check:
                 return # ID is a repeat                                     
+           
+            await state.redis.hset(f"lynxfall-tasks", key=id, value=0)
             
             _task_handler = TaskHandler(_json, queue)
             rc = await _task_handler.handle(state)
@@ -107,19 +109,13 @@ class TaskHandler():
         try:
             handler = state.backends.get(self.queue)
             rc = await handler(state, self.dict, **self.ctx)
-            
-            if isinstance(rc, Exception):
-                await state.on_error(state, logger, None, rc, "task_error", "ret_exc")
-                raise rc
-            
             return rc
         
         except Exception as exc:
             await state.on_error(state, logger, None, exc, "task_error", "failed_with_exc")
             await state.redis.incr("rmq_error_count")
-            state.stats.exc_tasks[self.dict["task_id"]] = exc
-            
-            raise exc
+            state.stats.exc_tasks[self.dict["task_id"]] = exc     
+            return exc
 
 class Stats():
     def __init__(self):
