@@ -184,7 +184,6 @@ class BaseOauth():
             
         scopes = self.get_scopes(oauth["scopes"])
         
-        logger.debug(f"{code}, {self.get_scopes(oauth['scopes'])}")
         return await self._generic_at(
             code, 
             "authorization_code",
