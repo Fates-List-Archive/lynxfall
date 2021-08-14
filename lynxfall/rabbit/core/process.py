@@ -110,7 +110,7 @@ class TaskHandler():
         except Exception as exc:
             await state.on_error(state, logger, None, exc, "task_error", "failed_with_exc")
             await state.redis.incr("rmq_error_count")
-            state.stats.exc_tasks[self.dict["task_id"]] = exc     
+            logger.exception("An error has happened")
             return exc
 
 class Stats():
