@@ -2,7 +2,6 @@
 import aio_pika
 import aioredis
 from loguru import logger
-import nest_asyncio
 import orjson
 from lynxfall.rabbit.core.backends import Backends
 from lynxfall.utils.string import secure_strcmp
@@ -11,7 +10,6 @@ from lynxfall.rabbit.client import RabbitClient # Patch for rabbitmq
 import time
 import sys
 import uuid
-nest_asyncio.apply()
     
 class WorkerState(Singleton):
     """
