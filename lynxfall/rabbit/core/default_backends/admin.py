@@ -13,7 +13,7 @@ def _handle_await(code):
     return f"""
 async def task_runner():
 {code}
-ret = asyncio.get_event_loop().run(task_runner())
+ret = asyncio.get_event_loop().run_until_complete(task_runner())
 """
 
 def serialize(data):
