@@ -13,7 +13,6 @@ RMQ_META = {
     "dbg": True, # Debug Mode
     "worker": None, # For when we do multi server rabbit
     "op": None, # Any operations that we should run as a string
-    "ret": None, # The UUID to save returned values to on Redis if wanted
 }
 
 async def add_rmq_task(queue_name: str, data: dict, *, headers: dict = None, **meta):
@@ -38,26 +37,3 @@ async def add_rmq_task(queue_name: str, data: dict, *, headers: dict = None, **m
         aio_pika.Message(orjson.dumps({"ctx": data, "meta": meta}), delivery_mode=aio_pika.DeliveryMode.PERSISTENT, headers = headers),
         routing_key=queue_name
     )
-
-async def add_rmq_task_with_ret(queue_name, data: dict, headers: dict = None, **meta):
-    """Add RabbitMQ Task, wait for it to complete, then get return code from Redis and return it"""
-    if "ret" in meta.keys():
-        _ret = meta["ret"]
-    else:
-        _ret = str(uuid.uuid4())
-        meta["ret"] = _ret
-    await add_rmq_task(queue_name, data, headers = headers, **meta)
-    return await rmq_get_ret(_ret)
-
-async def rmq_get_ret(id):
-    tries = 0
-    while tries < 100:
-        key = f"lynxrabbit:{id}"
-        ret = await RabbitClient.redis.get(f"lynxrabbit:{id}")
-        if not ret:
-            await asyncio.sleep(0.25) # Wait for quarter second before retrying
-            tries += 1
-            continue
-        await RabbitClient.redis.delete(f"lynxrabbit:{id}")
-        return orjson.loads(ret), True
-    return key, False # We didnt get anything
