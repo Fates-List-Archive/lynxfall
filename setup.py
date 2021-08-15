@@ -23,7 +23,6 @@ setup(
         "lynxfall.rabbit",
         "lynxfall.rabbit.client",
         "lynxfall.rabbit.core",
-        "lynxfall.rabbit.core.default_backends",
         "lynxfall.oauth",
         "lynxfall.oauth.providers"
     ],
