@@ -59,21 +59,6 @@ async def _new_task(queue, state):
             
             _task_handler = TaskHandler(_json, queue)
             rc = await _task_handler.handle(state)
-        
-            if isinstance(rc, Exception):
-                await state.on_error(state, logger, message, rc, "task_error", "th_rc_exc")
-                ran = False
-                raise rc
-
-            if _json["meta"].get("ret"):
-                key = f"lynxrabbit:{_json['meta'].get('ret')}"
-                logger.debug(f"Saving return to {key}")
-                
-                try:
-                    await state.redis.set(key, rc, ex = 60*2) # Save return code in redis
-                    
-                except Exception as exc:                          
-                    await state.redis.set(key, str(exc), ex = 60*2) # Save error code in redis
                
         except Exception as exc:
             logger.exception("Worker error!")
@@ -85,7 +70,6 @@ async def _new_task(queue, state):
             await state.redis.hset(f"lynxfall-tasks", key=id, value=0)
             message.ack()
 
-                
         logger.opt(ansi = True).info(f"<m>Message {curr} Handled</m>")
         logger.debug(f"Message JSON of {_json}")
         await state.redis.incr("rmq_total_msgs")
