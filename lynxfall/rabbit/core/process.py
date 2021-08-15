@@ -166,9 +166,6 @@ async def run_worker(
     state.stats = Stats()
     await state.backends.loadall(state) # Load all the backends and run prehooks
     
-    if monitor:
-        await state.backends.load(state, "lynxfall.rabbit.core.default_backends.admin") # Load admin
-    
     # Get handled message count
     total_msgs = await state.redis.get(f"rmq_total_msgs")
     state.stats.total_msgs = int(total_msgs) if total_msgs and isinstance(total_msgs, int) else 0
