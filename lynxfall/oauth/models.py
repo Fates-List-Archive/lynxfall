@@ -25,7 +25,7 @@ class OauthConfig(BaseModel):
 
 class OauthURL(ResponseModel):
     url: str
-    state_id: str
+    state: str
 
 class AccessToken(ResponseModel):
     """
@@ -41,7 +41,6 @@ class AccessToken(ResponseModel):
     expires_in: Union[int, float]
     scopes: str
     current_time: Union[int, float]
-    state_id: Optional[str] = None
 
     def expired(self):
         """Returns whether a access token has expired or not"""
