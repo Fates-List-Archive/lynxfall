@@ -86,5 +86,8 @@ class DiscordOauth(BaseOauth):
         
         payload = {"access_token": access_token.access_token}
         
-        await self._request(url, "PUT", json=payload, headers=headers)
-        return True
+        try:
+            await self._request(url, "PUT", json=payload, headers=headers)
+            return True
+        except Exception:
+            return False
