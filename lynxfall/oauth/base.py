@@ -67,9 +67,7 @@ class BaseOauth():
         code: str, 
         grant_type: str, 
         redirect_uri: str, 
-        scopes: str,
-        *, 
-        state_id: Optional[str] = None
+        scopes: str
     ) -> AccessToken:
         """Generic access token handling"""
         payload = {
