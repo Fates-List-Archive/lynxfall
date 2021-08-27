@@ -20,6 +20,7 @@ class BaseOauth():
         self.client_id = oc.client_id
         self.client_secret = oc.client_secret
         self.redirect_uri = oc.redirect_uri
+        self.session = aiohttp.ClientSession()
         
     def get_scopes(self, scopes_lst: List[str]) -> str:
         """Helper function to turn a list of scopes into a space seperated string"""
@@ -46,22 +47,20 @@ class BaseOauth():
     
     async def _request(self, url, method, **urlargs):
         """Makes a API request using aiohttp"""
-        
-        async with aiohttp.ClientSession() as sess:
-            f = getattr(sess, method.lower())
-            async with f(url, **urlargs) as res:
-                if str(res.status)[0] != "2":
-                    try:
-                        json = await res.json()
-                    except Exception:
-                        json = {}
-                    raise OauthRequestError(f"Could not make oauth request, recheck your client_secret. Got status code {res.status} and json of {json}")
+        f = getattr(self.session, method.lower())
+        async with f(url, **urlargs) as res:
+            if str(res.status)[0] != "2":
+                try:
+                    json = await res.json()
+                except Exception:
+                    json = {}
+                raise OauthRequestError(f"Could not make oauth request, recheck your client_secret. Got status code {res.status} and json of {json}")
                     
-                elif res.status == 401:
-                    return OauthRequestError("Oauth endpoint returned 401")
+            elif res.status == 401:
+                return OauthRequestError("Oauth endpoint returned 401")
                 
-                json = await res.json()
-                return json | {"current_time": time.time()}
+            json = await res.json()
+            return json | {"current_time": time.time()}
             
     async def _generic_at(
         self, 
