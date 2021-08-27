@@ -16,65 +16,18 @@ class BaseOauth():
     TOKEN_URL = "https://example.com/api/oauth2/token"
     API_URL = "https://example.com/api"
     
-    def __init__(self, oc: OauthConfig, redis: Connection):
-        self.auth_s = URLSafeSerializer(oc.lynxfall_key, "auth")
+    def __init__(self, oc: OauthConfig):
         self.client_id = oc.client_id
         self.client_secret = oc.client_secret
         self.redirect_uri = oc.redirect_uri
-        self.redis = redis
         
     def get_scopes(self, scopes_lst: List[str]) -> str:
         """Helper function to turn a list of scopes into a space seperated string"""
         return "%20".join(scopes_lst)
-
-    def create_state(self, id):
-        """
-        Creates a state as JWT from a state id
-        
-        Lynxfall internally uses UUID for state ID which
-        is subject to change and should not be relied on.
-        """
-        return self.auth_s.dumps(str(id))
-
-    def get_state_id(self, state_jwt):
-        """Get the state given the state jwt. Returns None if jwt is invalid"""
-        try:
-            state_jwt_id = self.auth_s.loads(state_jwt)
-            return state_jwt_id
-        except Exception:
-            return None
-        
-    async def get_state(self, state_id):
-        """Get a state from redis"""
-        data = await self.redis.get(f"oauth.{self.IDENTIFIER}-{state_id}")
-        if not data:
-            return None
-        
-        try:
-            return orjson.loads(data)
-        except:
-            return None
-        
-    def verify_state(self, state_id, state_jwt):
-        """Verifies a state id based on state jwt"""
-        state_jwt_id = self.get_state(state_jwt)
-        if not state_jwt_id:
-            return False
-        
-        if secure_strcmp(state_id, state_jwt_id):
-            return True
-        return False
-    
-    async def clear_state(self, state_id):
-        """Clears a state ID from redis"""
-        await self.redis.delete(f"oauth.{self.IDENTIFIER}-{state_id}")
         
     async def get_auth_url(
         self, 
-        scopes: List[str],
-        state_data: dict, 
-        redirect_uri: Optional[str] = None,
-        state_expiry = 150
+        scopes: List[str]
     ) -> OauthURL:
         """
         Gets a one time auth url for a user and saves state ID to redis. 
@@ -82,20 +35,13 @@ class BaseOauth():
         """
         
         # Add in scopes to state data
-        state_data["scopes"] = scopes
         scopes = self.get_scopes(scopes)
-        redirect_uri = self.redirect_uri if not redirect_uri else redirect_uri
-        state_data["redirect_uri"] = redirect_uri
-        state_id = str(uuid.uuid4())
-        state = self.create_state(state_id)
-        
-        await self.redis.set(f"oauth.{self.IDENTIFIER}-{state_id}", orjson.dumps(state_data), ex = state_expiry)
+        state = str(uuid.uuid4())
       
         return OauthURL(
             identifier = self.IDENTIFIER,
-            url = f"{self.AUTH_URL}?client_id={self.client_id}&redirect_uri={redirect_uri}&state={state}&response_type=code&scope={scopes}",  # noqa
-            state_id = state_id,
-            redirect_uri = redirect_uri
+            url = f"{self.AUTH_URL}?client_id={self.client_id}&redirect_uri={self.redirect_uri}&state={state}&response_type=code&scope={scopes}",  # noqa
+            state = state
         )
     
     async def _request(self, url, method, **urlargs):
@@ -150,46 +96,23 @@ class BaseOauth():
             expires_in = json["expires_in"],
             current_time = json["current_time"],
             scopes = scopes,
-            state_id = state_id
+            state_id = None
         )
     
     async def get_access_token(
         self, 
         code: str, 
-        state_jwt: str, 
-        login_retry_url: str,
-        clear_state: bool = True
+        scopes: list
     ) -> AccessToken: 
         """
         Creates a access token from the state (as JWT) that was created using get_auth_link. 
         Login retry URL is where users can go to login again if login fails.
-        
-        For security, use clear_state as True unless you have a reason not to. 
-        If you do need clear_state as False, be sure to call clear_state(state_id) to clear the state from the DB.
-        """
-        state_id = self.get_state_id(state_jwt)
-        if not state_id:
-            raise OauthStateError(
-                f"Invalid state provided. Please try logging in again using {login_retry_url}"
-            )
-        
-        oauth = await self.get_state(state_id)
-        if not oauth:
-            raise OauthStateError(
-                f"Invalid state. There is no oauth data associated with this state. Please try logging in again using {login_retry_url}"
-            )
-        
-        if clear_state:
-            await self.clear_state(state_id)
-            
-        scopes = self.get_scopes(oauth["scopes"])
-        
+        """       
         return await self._generic_at(
             code, 
             "authorization_code",
-            oauth["redirect_uri"], 
-            self.get_scopes(oauth["scopes"]),
-            state_id = state_id
+            self.redirect_uri,
+            self.get_scopes(scopes),
         )
            
     async def refresh_access_token(self, access_token: AccessToken) -> str:
