@@ -2,11 +2,6 @@ from pydantic import BaseModel
 from typing import Union, Optional, List
 import time
 
-
-class ResponseModel(BaseModel):
-    identifier: str
-    redirect_uri: str
-
 # Core models
 class OauthConfig(BaseModel):
     """
@@ -23,11 +18,11 @@ class OauthConfig(BaseModel):
     redirect_uri: str
     lynxfall_key: str
 
-class OauthURL(ResponseModel):
+class OauthURL(BaseModel):
     url: str
     state: str
 
-class AccessToken(ResponseModel):
+class AccessToken(BaseModel):
     """
     Represents a access token
     
