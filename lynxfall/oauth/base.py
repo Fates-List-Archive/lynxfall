@@ -95,8 +95,7 @@ class BaseOauth():
             refresh_token = json["refresh_token"],
             expires_in = json["expires_in"],
             current_time = json["current_time"],
-            scopes = scopes,
-            state_id = None
+            scopes = scopes
         )
     
     async def get_access_token(
