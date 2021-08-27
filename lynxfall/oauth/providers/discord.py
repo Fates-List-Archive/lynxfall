@@ -86,8 +86,5 @@ class DiscordOauth(BaseOauth):
         
         payload = {"access_token": access_token.access_token}
         
-        async with aiohttp.ClientSession() as sess:
-            async with sess.put(url, headers = headers, json = payload) as res:
-                if res.status not in (201, 204):
-                    return False
-                return True
+        await self._request(url, "PUT", json=payload, headers=headers)
+        return True
