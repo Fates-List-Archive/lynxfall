@@ -10,13 +10,10 @@ class OauthConfig(BaseModel):
     client_id - Client ID
     client_secret - Client Secret
     redirect_uri - A allowed redirect uri (some, like discord, need this to be added to your oauth application)
-    
-    lynxfall_key - A randomly generated key for lynxfall to use for state verification etc.
     """
     client_id: str
     client_secret: str
     redirect_uri: str
-    lynxfall_key: str
 
 class OauthURL(BaseModel):
     url: str
