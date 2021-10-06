@@ -59,8 +59,9 @@ async def _handle_rl(
         method = request.method if request.method not in ("HEAD", "OPTIONS", "CONNECT", "TRACE") else "GET"
         path = request.url.path
     else:
-        method = operation_bucket
-        path = "op"
+        method = "OP"
+        path = operation_bucket
+        
     sub_key = f"{prefix}.sub-{method}@{request.url.path}:{rate_key}#{index}" if limits else ""
     global_key = f"{prefix}.global-{method}@{request.url.path}:{rate_key}"
     api_block_key = f"{prefix}.block:{rate_key}"
@@ -99,7 +100,7 @@ async def _handle_rl(
         response.headers[f"Requests-{ext}-Remaining"] = str(strategy.times - num) if num <= strategy.times else "-1" # Requests remaining in time window
         response.headers[f"Requests-{ext}-Window"] = str(strategy.milliseconds/1000)
         response.headers[f"Requests-{ext}-Expiry-Time"] = str(pexpire)
-        response.headers["Request-Bucket"] = method
+        response.headers["Request-Bucket"] = path
         return response
         
     response = _set_headers(response, strategy, pexpires, nums, ext = "Sub") if limits else response
