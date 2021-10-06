@@ -29,5 +29,5 @@ class Ratelimiter:
             identifier = LynxfallLimiter.identifier or self.identifier,
             callback = LynxfallLimiter.callback or self.callback,
             redis = LynxfallLimiter.redis,
-            operation_bucket = operation_bucket,
+            operation_bucket = self.operation_bucket,
         )
