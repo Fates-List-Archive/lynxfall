@@ -1,6 +1,4 @@
 #cython: language_level=3
-
-# Stub to bypass Cython async limitations with regards to coroutines
 from typing import Optional, List
 
 from starlette.requests import Request
@@ -15,9 +13,11 @@ class Ratelimiter:
         *,
         global_limit: Limit,
         sub_limits: Optional[List[Limit]] = [],
+        operation_bucket: Optional[str] = None
     ):
         self.sub_limits = sub_limits
         self.global_limit = global_limit
+        self.operation_bucket = operation_bucket
     
     async def __call__(self, request: Request, response: Response):          
         return await _handle_rl(
@@ -28,5 +28,6 @@ class Ratelimiter:
             prefix = LynxfallLimiter.prefix,
             identifier = LynxfallLimiter.identifier or self.identifier,
             callback = LynxfallLimiter.callback or self.callback,
-            redis = LynxfallLimiter.redis
+            redis = LynxfallLimiter.redis,
+            operation_bucket = operation_bucket,
         )
