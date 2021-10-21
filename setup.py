@@ -20,9 +20,6 @@ setup(
         "lynxfall.mdextend",
         "lynxfall.utils",
         "lynxfall.ratelimits",
-        "lynxfall.rabbit",
-        "lynxfall.rabbit.client",
-        "lynxfall.rabbit.core",
         "lynxfall.oauth",
         "lynxfall.oauth.providers"
     ],
