@@ -3,8 +3,8 @@ from typing import Callable
 
 import aioredis
 from fastapi import HTTPException
-from starlette.requests import Request
-from starlette.responses import Response
+from fastapi.requests import Request
+from fastapi.responses import Response
 from starlette.status import HTTP_429_TOO_MANY_REQUESTS
 
 async def default_identifier(request: Request):
@@ -26,7 +26,7 @@ async def default_callback(request: Request, response: Response, pexpire: int, e
     raise HTTPException(
         HTTP_429_TOO_MANY_REQUESTS, 
         detail = f"You are being ratelimited. Try again in {expire} seconds", 
-        headers={"Retry-After": str(expire)} | dict(response.headers)
+        headers={"Retry-After": str(expire), "X-Retry-After": str(expire)} | dict(response.headers)
     )
 
 
