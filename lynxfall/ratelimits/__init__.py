@@ -26,7 +26,7 @@ async def default_callback(request: Request, response: Response, pexpire: int, e
     raise HTTPException(
         HTTP_429_TOO_MANY_REQUESTS, 
         detail = f"You are being ratelimited. Try again in {expire} seconds", 
-        headers={"Retry-After": str(expire), "X-Retry-After": str(expire)} | dict(response.headers)
+        headers={"Retry-After": str(expire), "Lynxfall-Retry-After": str(expire)} | dict(response.headers)
     )
 
 
