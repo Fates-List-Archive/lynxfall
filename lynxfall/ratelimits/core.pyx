@@ -62,8 +62,8 @@ async def _handle_rl(
         method = "OP"
         path = operation_bucket
         
-    sub_key = f"{prefix}.sub-{method}@{request.url.path}:{rate_key}#{index}" if limits else ""
-    global_key = f"{prefix}.global-{method}@{request.url.path}:{rate_key}"
+    sub_key = f"{prefix}.sub-{method}@{path}:{rate_key}#{index}" if limits else ""
+    global_key = f"{prefix}.global-{method}@{path}:{rate_key}"
     api_block_key = f"{prefix}.block:{rate_key}"
         
     async def rl_update(key):
