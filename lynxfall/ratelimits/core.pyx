@@ -36,7 +36,9 @@ async def _handle_rl(
 ):
     if not redis:
         raise Exception("You must call LynxfallLimiter.init in the startup event of FastAPI!")
-        
+    
+    prefix = "rl:"
+    
     cdef int index = 0
     
     # Strategy for RL is picked randomly and applied
@@ -45,7 +47,7 @@ async def _handle_rl(
         strategy = limits[index]
         
     # moved here because constructor run before app startup
-    rate_key = await identifier(request) 
+    rate_key = await identifier(request)
         
     # No ratelimit
     if not rate_key:
@@ -100,6 +102,7 @@ async def _handle_rl(
         response.headers[f"Requests-{ext}-Remaining"] = str(strategy.times - num) if num <= strategy.times else "-1" # Requests remaining in time window
         response.headers[f"Requests-{ext}-Window"] = str(strategy.milliseconds/1000)
         response.headers[f"Requests-{ext}-Expiry-Time"] = str(pexpire)
+        response.headers["Requests-Key"] = global_key
         response.headers["Request-Bucket"] = path
         return response
         
