@@ -27,11 +27,10 @@ async def _handle_rl(
     request: Request, 
     response: Response, 
     limits: List[Limit], 
-    global_limit: Limit = None,
-    prefix,
     identifier, 
     callback,
     redis,
+    global_limit: List[Limit] = None,
     operation_bucket = None,
     applied_global: bool = False
 ):
@@ -48,7 +47,7 @@ async def _handle_rl(
     strategy = limits[index]
     
     if global_limit and not applied_global:
-        f_args |= {"applied_global": True, "limits": [global_limit]}
+        f_args |= {"applied_global": True, "limits": global_limit}
         await _handle_rl(**f_args)
         
     # moved here because constructor run before app startup
