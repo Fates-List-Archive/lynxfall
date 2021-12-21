@@ -47,9 +47,18 @@ async def _handle_rl(
     index = random.randint(0, len(limits) - 1)
     strategy = limits[index]
     
+    if applied_global: 
+        meta = "global"
+    else:
+        meta = "sub"
+    
     if global_limit and not applied_global:
         f_args |= {"applied_global": True, "limits": global_limit}
         await _handle_rl(**f_args)
+    
+    # No other limit, quit
+    if not applied_global and len(limits) <= 1:
+        return None
         
     # moved here because constructor run before app startup
     rate_key = await identifier(request)
@@ -68,7 +77,7 @@ async def _handle_rl(
     else:
         path = request.url.path
         
-    key = f"{prefix}.global-{method}@{path}:{rate_key}"
+    key = f"{prefix}.global-{method}@{path}:{rate_key}#{index}::{meta}"
     api_block_key = f"{prefix}.block:{rate_key}"
         
     async def rl_update(key):
