@@ -5,6 +5,7 @@ from typing import Callable, Optional, List
 
 from starlette.requests import Request
 from starlette.responses import Response
+from fastapi.exceptions import HTTPException
 
 import random
 from math import ceil
@@ -77,8 +78,7 @@ async def _handle_rl(
     else:
         path = request.url.path
         
-    key = f"{prefix}.global-{method}@{path}:{rate_key}#{index}::{meta}"
-    api_block_key = f"{prefix}.block:{rate_key}"
+    key = f"{prefix}{method}@{path}:{rate_key}#{index}::{meta}"
         
     async def rl_update(key):
         tr = redis.pipeline()
@@ -108,13 +108,14 @@ async def _handle_rl(
         response.headers[f"Requests-{ext}-Remaining"] = str(strategy.times - num) if num <= strategy.times else "-1" # Requests remaining in time window
         response.headers[f"Requests-{ext}-Window"] = str(strategy.milliseconds/1000)
         response.headers[f"Requests-{ext}-Expiry-Time"] = str(pexpire)
-        response.headers["Requests-Key"] = key
+        response.headers[f"Requests-{ext}-Key"] = key
         response.headers["Request-Bucket"] = path
         return response
         
-    response = _set_headers(response, strategy, pexpires, nums, ext = "Sub" if applied_global else "Global")
-        
-    response.headers["Ratelimit-Sub-Index"] = str(index)
+    response = _set_headers(response, strategy, pexpires, nums, ext = "Sub" if not applied_global else "Global")
+    
+    if not applied_global:
+        response.headers["Ratelimit-Sub-Index"] = str(index)
         
     cdef int expire = 0
     
@@ -124,12 +125,10 @@ async def _handle_rl(
         return await callback(request, response, pexpires, expire)
         
     # Handle API blocks
-    tr = redis.pipeline()
-    tr.get(api_block_key)
-    tr.pttl(api_block_key)
-    blocked, pexpireb = await tr.execute()
+    api_block_key = f"{prefix}api-block:{rate_key}"
+      
+    blocked = await redis.get(api_block_key)
     if blocked:
-        expire = ceil(pexpireb / 1000)
-        return await callback(request, response, pexpireb, expire)
+        raise HTTPException(detail="Due to API abuse, you have been temporarily blocked from using our APIs!", status_code=400)
         
     return None
