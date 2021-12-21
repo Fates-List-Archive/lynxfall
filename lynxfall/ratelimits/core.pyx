@@ -27,24 +27,29 @@ async def _handle_rl(
     request: Request, 
     response: Response, 
     limits: List[Limit], 
-    gstrategy: Limit,
+    global_limit: Limit = None,
     prefix,
     identifier, 
     callback,
     redis,
-    operation_bucket = None
+    operation_bucket = None,
+    applied_global: bool = False
 ):
+    f_args = locals()
     if not redis:
         raise Exception("You must call LynxfallLimiter.init in the startup event of FastAPI!")
     
-    prefix = "rl:"
+    prefix = "cad-rl:" # Cats and dragons RL (because it tends to be random on how it ratelimits)
     
     cdef int index = 0
     
     # Strategy for RL is picked randomly and applied
-    if limits:
-        index = random.randint(0, len(limits) - 1)
-        strategy = limits[index]
+    index = random.randint(0, len(limits) - 1)
+    strategy = limits[index]
+    
+    if global_limit and not applied_global:
+        f_args |= {"applied_global": True, "limits": [global_limit]}
+        await _handle_rl(**f_args)
         
     # moved here because constructor run before app startup
     rate_key = await identifier(request)
@@ -57,15 +62,13 @@ async def _handle_rl(
     # Key format for global ratelimits is lynxfall_limiter.global-METHOD@URL:KEY - These are global to a API endpoint and blocks you from the whole API for 3 minutes + milliseconds if you hit it
     # Key format for API wide (ceiling) ratelimit if needed is lynxfall_limiter.apiwide:KEY
     # Key format for API block limit (global and API wide trigger this) is lynxfall_limiter.block:KEY. It may or may not have a expiry
-    if not operation_bucket:
-        method = request.method if request.method not in ("HEAD", "OPTIONS", "CONNECT", "TRACE") else "GET"
-        path = request.url.path
-    else:
-        method = "OP"
+    method = request.method if request.method not in ("HEAD", "OPTIONS", "CONNECT", "TRACE") else "GET"
+    if operation_bucket:
         path = operation_bucket
+    else:
+        path = request.url.path
         
-    sub_key = f"{prefix}.sub-{method}@{path}:{rate_key}#{index}" if limits else ""
-    global_key = f"{prefix}.global-{method}@{path}:{rate_key}"
+    key = f"{prefix}.global-{method}@{path}:{rate_key}"
     api_block_key = f"{prefix}.block:{rate_key}"
         
     async def rl_update(key):
@@ -80,20 +83,14 @@ async def _handle_rl(
     cdef int numg = 0
     cdef int pexpireg = 0
         
-    sub_key_rl = await rl_update(sub_key)
+    key_rl = await rl_update(key)
         
-    if limits:
-        nums: int = sub_key_rl[0]
-        pexpires: int = sub_key_rl[1]
- 
-    numg, pexpireg = await rl_update(global_key)
+    nums: int = key_rl[0]
+    pexpires: int = key_rl[1]
         
     # Expire ratelimits
-    if limits and nums == 1:
-        await redis.pexpire(sub_key, strategy.milliseconds)
-        
-    if numg == 1 and gstrategy:
-        await redis.pexpire(global_key, gstrategy.milliseconds)
+    if nums == 1:
+        await redis.pexpire(key, strategy.milliseconds)
             
     # Set ratelimit headers
     def _set_headers(response, strategy, pexpire, num, *, ext: str):
@@ -102,28 +99,18 @@ async def _handle_rl(
         response.headers[f"Requests-{ext}-Remaining"] = str(strategy.times - num) if num <= strategy.times else "-1" # Requests remaining in time window
         response.headers[f"Requests-{ext}-Window"] = str(strategy.milliseconds/1000)
         response.headers[f"Requests-{ext}-Expiry-Time"] = str(pexpire)
-        response.headers["Requests-Key"] = global_key
+        response.headers["Requests-Key"] = key
         response.headers["Request-Bucket"] = path
         return response
         
-    response = _set_headers(response, strategy, pexpires, nums, ext = "Sub") if limits else response
-    response = _set_headers(response, gstrategy, pexpireg, numg, ext = "Global")   
+    response = _set_headers(response, strategy, pexpires, nums, ext = "Sub" if applied_global else "Global")
         
-    if limits:
-        response.headers["Ratelimit-Sub-Index"] = str(index)
+    response.headers["Ratelimit-Sub-Index"] = str(index)
         
     cdef int expire = 0
-        
-    # Handle ratelimits
-    if gstrategy and numg > gstrategy.times:
-        tr = redis.pipeline()
-        tr.incrby(api_block_key, 1)
-        tr.pexpire(api_block_key, gstrategy.milliseconds + 1000*60*3)
-        await tr.execute()
-        expire = ceil(pexpireg / 1000)
-        return await callback(request, response, pexpireg, expire)
-        
-    elif limits and nums > strategy.times:
+    
+    # Handle limits
+    if nums > strategy.times:
         expire = ceil(pexpires / 1000)
         return await callback(request, response, pexpires, expire)
         
