@@ -32,7 +32,8 @@ async def _handle_rl(
     redis,
     global_limit: List[Limit] = None,
     operation_bucket = None,
-    applied_global: bool = False
+    applied_global: bool = False,
+    **kwargs
 ):
     f_args = locals()
     if not redis:
