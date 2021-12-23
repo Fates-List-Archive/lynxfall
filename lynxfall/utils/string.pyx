@@ -1,7 +1,6 @@
 #cython: language_level=3
 import string
 import secrets
-import html5lib
 from bs4 import BeautifulSoup
 
 def get_token(length: int) -> str:
@@ -56,7 +55,7 @@ def ireplacem(replace_tuple, text):
     return text
 
 def intl_text(text: str, lang: str, dbg: bool = False):
-    soup = BeautifulSoup.BeautifulSoup(text)
+    soup = BeautifulSoup(text)
     page = ""
     for lang in soup.find_all('fl-lang'):
         if lang.get("code") != lang:
