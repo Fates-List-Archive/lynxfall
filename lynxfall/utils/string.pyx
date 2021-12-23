@@ -61,5 +61,5 @@ def intl_text(text: str, lang: str, dbg: bool = False):
         if lang_tag.name == "fl-lang" and lang_tag.get("code", "") not in (lang, "default", ""):
             lang_tag.decompose()
     
-    return str(lang_tag)
+    return str(soup)
 
