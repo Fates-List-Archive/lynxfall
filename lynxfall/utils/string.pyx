@@ -60,6 +60,8 @@ def intl_text(text: str, lang: str, dbg: bool = False):
     for lang_tag in soup.find_all():
         if lang_tag.name == "fl-lang" and lang_tag.get("code", "") not in (lang, "default", ""):
             continue
+        if lang_tag.name in ("html", "head", "body"):
+            continue
         page += str(lang_tag)
         
     return page
