@@ -58,6 +58,7 @@ def intl_text(text: str, lang: str, dbg: bool = False):
     soup = BeautifulSoup(text, features="lxml")
     page = ""
     for lang_tag in soup.find_all('fl-lang'):
+        print(lang_tag)
         if lang_tag.get("code", "") in (lang, "default", ""):
             page += lang_tag.string
             
