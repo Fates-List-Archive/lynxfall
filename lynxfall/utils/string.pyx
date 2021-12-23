@@ -61,7 +61,7 @@ def intl_text(text: str, lang: str, dbg: bool = False):
         if lang.get("code") != lang:
             continue
         else:
-            page += str(lang.string)
+            page += lang.string
     if not page:
         return text
     return page
