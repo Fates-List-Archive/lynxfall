@@ -56,13 +56,11 @@ def ireplacem(replace_tuple, text):
 
 def intl_text(text: str, lang: str, dbg: bool = False):
     soup = BeautifulSoup(text, features="lxml")
-    page = ""
-    for lang_tag in soup.find_all(recursive=False):
+    for lang_tag in soup.find_all():
         if lang_tag.name == "fl-lang" and lang_tag.get("code", "") not in (lang, "default", ""):
-            continue
+            lang_tag.decompose()
         if lang_tag.name in ("html", "head", "body"):
-            continue
-        page += str(lang_tag)
+            lang_tag.decompose()
         
-    return page
+    return str(soup)
 
