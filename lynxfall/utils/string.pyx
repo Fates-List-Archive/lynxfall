@@ -57,10 +57,9 @@ def ireplacem(replace_tuple, text):
 def intl_text(text: str, lang: str, dbg: bool = False):
     soup = BeautifulSoup(text, features="lxml")
     for lang_tag in soup.find_all():
+        print(lang_tag)
         if lang_tag.name == "fl-lang" and lang_tag.get("code", "") not in (lang, "default", ""):
             lang_tag.decompose()
-        if lang_tag.name in ("html", "head", "body"):
-            lang_tag.decompose()
         
-    return str(soup)
+    return str(soup.body or soup)
 
