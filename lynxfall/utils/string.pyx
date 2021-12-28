@@ -60,5 +60,5 @@ def intl_text(text: str, lang: str, dbg: bool = False):
         if lang_tag.get("code", "") not in (lang, "default", ""):
             lang_tag.decompose()
     
-    return str(soup).replace("html>", "span>").replace("body>", "span>").replace("p>", "span>")
+    return str(soup).replace("html>", "span>").replace("body>", "span>")
 
