@@ -98,16 +98,18 @@ class BaseOauth():
     async def get_access_token(
         self, 
         code: str, 
-        scopes: list
+        scopes: list,
+        override_redirect_uri: str = None
     ) -> AccessToken: 
         """
         Creates a access token from the state (as JWT) that was created using get_auth_link. 
         Login retry URL is where users can go to login again if login fails.
-        """       
+        """
+        redirect_uri = override_redirect_uri or self.redirect_uri
         return await self._generic_at(
             code, 
             "authorization_code",
-            self.redirect_uri,
+            redirect_uri,
             self.get_scopes(scopes),
         )
            
