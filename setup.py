@@ -19,9 +19,6 @@ setup(
         "lynxfall.core",
         "lynxfall.mdextend",
         "lynxfall.utils",
-        "lynxfall.ratelimits",
-        "lynxfall.oauth",
-        "lynxfall.oauth.providers"
     ],
     zip_safe=False,
 )
