@@ -12,7 +12,6 @@ setup(
     ext_modules=cythonize([
         "lynxfall/mdextend/*.pyx",
         "lynxfall/utils/*.pyx",
-        "lynxfall/ratelimits/*.pyx",
     ]),
     packages=[
         "lynxfall", 
